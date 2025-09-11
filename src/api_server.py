@@ -12,17 +12,18 @@ import subprocess
 import uuid
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List, Optional
 import wave
 import tempfile
 
 import sounddevice as sd
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, UploadFile, File, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
+import jwt
 
 from batch_transcribe import BatchTranscriber, load_batch_config
 from hybrid_transcribe import HybridTranscriber, load_hybrid_config
@@ -57,6 +58,17 @@ class SessionStatus(BaseModel):
     audio_path: Optional[str] = None
     transcript_path: Optional[str] = None
     error_message: Optional[str] = None
+
+# Auth models
+class UserLoginRequest(BaseModel):
+    user_id: Optional[str] = None
+    username: Optional[str] = None
+    exp_minutes: int = 60
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = 'bearer'
+    expires_at: str
 
 class TranscriptionStatus(BaseModel):
     status: str  # 'idle', 'recording', 'processing', 'completed', 'error'
@@ -123,6 +135,50 @@ def _safe_resolve(path_str: str) -> Path:
 def _device_key(device_index: Optional[int]) -> str:
     """Return key used to gate concurrent capture on the same device."""
     return 'default' if device_index is None else str(device_index)
+
+# --- Minimal JWT Auth (Bearer) for session endpoints ---
+def _jwt_secret() -> str:
+    secret = os.getenv('JWT_SECRET')
+    if not secret:
+        # Development fallback; for production set JWT_SECRET in env
+        secret = 'dev-secret-change-me'
+    return secret
+
+def _extract_bearer_token(authorization: Optional[str]) -> str:
+    if not authorization or not authorization.lower().startswith('bearer '):
+        raise HTTPException(status_code=401, detail='Not authenticated')
+    return authorization.split(' ', 1)[1].strip()
+
+def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
+    token = _extract_bearer_token(authorization)
+    try:
+        payload = jwt.decode(token, _jwt_secret(), algorithms=['HS256'])
+        if not isinstance(payload, dict):
+            raise HTTPException(status_code=401, detail='Invalid token payload')
+        return payload
+    except jwt.PyJWTError as e:
+        raise HTTPException(status_code=401, detail=f'Invalid token: {e}')
+
+def _user_id_from_payload(payload: Dict) -> str:
+    return str(payload.get('sub') or payload.get('user_id') or payload.get('uid') or '')
+
+def _ensure_session_owner(session: Dict, user_id: str):
+    owner = session.get('user_id')
+    if owner and owner != user_id:
+        raise HTTPException(status_code=403, detail='Forbidden: session belongs to another user')
+    if not owner:
+        session['user_id'] = user_id
+
+def create_access_token(user_id: str, minutes: int = 60) -> tuple[str, datetime]:
+    now = datetime.utcnow()
+    exp = now + timedelta(minutes=max(1, minutes))
+    payload = {
+        'sub': user_id,
+        'iat': int(now.timestamp()),
+        'exp': int(exp.timestamp()),
+    }
+    token = jwt.encode(payload, _jwt_secret(), algorithm='HS256')
+    return token, exp
 
 # WebSocket manager
 class ConnectionManager:
@@ -199,6 +255,21 @@ session_ws = SessionWSManager()
 @app.get("/")
 async def root():
     return {"message": "Mom Transcript API", "version": "1.0.0"}
+
+# --- Auth endpoints (dev/demo) ---
+@app.post("/auth/login", response_model=TokenResponse)
+async def auth_login(req: UserLoginRequest):
+    # Very basic dev login: accept any user_id or username
+    user_id = (req.user_id or req.username or '').strip()
+    if not user_id:
+        raise HTTPException(status_code=400, detail='user_id or username is required')
+    token, exp = create_access_token(user_id=user_id, minutes=req.exp_minutes)
+    return TokenResponse(access_token=token, expires_at=exp.isoformat())
+
+@app.get("/auth/verify")
+async def auth_verify(user: Dict = Depends(get_current_user)):
+    # Echo back decoded claims
+    return {'valid': True, 'user': user}
 
 @app.get("/health")
 async def health_check():
@@ -387,7 +458,7 @@ async def recording_stop():
 
 # --- Sessionized Recording API ---
 @app.post("/sessions/start", response_model=SessionStartResponse)
-async def sessions_start(config: RecordingConfig):
+async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_current_user)):
     """Start a sessionized microphone recording. Returns session_id."""
     try:
         cfg = load_batch_config('configs/hybrid_config_meeting.json')
@@ -423,6 +494,7 @@ async def sessions_start(config: RecordingConfig):
                     'error': None,
                     'chunk_count': 0,
                 }
+                _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
             else:
                 if dev_key in active_device_sessions:
                     raise HTTPException(status_code=409, detail=f"Device in use by session {active_device_sessions[dev_key]}")
@@ -441,6 +513,7 @@ async def sessions_start(config: RecordingConfig):
                     'error': None,
                 }
                 active_device_sessions[dev_key] = session_id
+                _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
 
         # Notify session channel
         try:
@@ -462,13 +535,14 @@ async def sessions_start(config: RecordingConfig):
 
 
 @app.post("/sessions/{session_id}/stop")
-async def sessions_stop(session_id: str):
+async def sessions_stop(session_id: str, user: Dict = Depends(get_current_user)):
     """Stop recording for a session, transcribe audio, and return results."""
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
         transcriber = session.get('transcriber')
+        _ensure_session_owner(session, _user_id_from_payload(user))
         if session.get('status') != 'recording' or not transcriber:
             raise HTTPException(status_code=400, detail="Session is not recording")
         session['status'] = 'processing'
@@ -526,11 +600,12 @@ async def sessions_stop(session_id: str):
 
 
 @app.get("/sessions/{session_id}/status", response_model=SessionStatus)
-async def sessions_status(session_id: str):
+async def sessions_status(session_id: str, user: Dict = Depends(get_current_user)):
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
+        _ensure_session_owner(session, _user_id_from_payload(user))
         return SessionStatus(
             session_id=session_id,
             status=session.get('status', 'unknown'),
@@ -544,12 +619,13 @@ async def sessions_status(session_id: str):
 
 
 @app.post("/sessions/{session_id}/ingest")
-async def sessions_ingest(session_id: str, file: UploadFile = File(...)):
+async def sessions_ingest(session_id: str, file: UploadFile = File(...), user: Dict = Depends(get_current_user)):
     """Ingest an audio chunk file into a session (ingest mode)."""
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
+        _ensure_session_owner(session, _user_id_from_payload(user))
         if session.get('status') not in ['awaiting-chunks', 'ingesting']:
             raise HTTPException(status_code=400, detail="Session not accepting chunks")
         out_dir = Path(session['output_dir'])
@@ -615,12 +691,13 @@ def _merge_wavs(wav_files: List[Path], output_path: Path) -> None:
 
 
 @app.post("/sessions/{session_id}/finish")
-async def sessions_finish(session_id: str):
+async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user)):
     """Finalize ingest session: merge/convert chunks and transcribe."""
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
+        _ensure_session_owner(session, _user_id_from_payload(user))
         if session.get('status') not in ['awaiting-chunks', 'ingesting']:
             raise HTTPException(status_code=400, detail="Session is not an ingest session or already finished")
         out_dir = Path(session['output_dir'])
@@ -697,11 +774,16 @@ async def sessions_finish(session_id: str):
     }
 
 @app.get("/sessions", response_model=List[SessionStatus])
-async def sessions_list():
+async def sessions_list(user: Dict = Depends(get_current_user)):
     """List all sessions (active and history)."""
     items: List[SessionStatus] = []
+    uid = _user_id_from_payload(user)
     with sessions_lock:
         for sid, sess in sessions.items():
+            # Only list sessions owned by this user
+            owner = sess.get('user_id')
+            if owner and owner != uid:
+                continue
             items.append(SessionStatus(
                 session_id=sid,
                 status=sess.get('status', 'unknown'),
@@ -715,12 +797,13 @@ async def sessions_list():
     return items
 
 @app.post("/sessions/{session_id}/cancel")
-async def sessions_cancel(session_id: str):
+async def sessions_cancel(session_id: str, user: Dict = Depends(get_current_user)):
     """Cancel a recording session without transcription and free device."""
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
+        _ensure_session_owner(session, _user_id_from_payload(user))
         transcriber = session.get('transcriber')
         status = session.get('status')
         session['status'] = 'cancelling'
@@ -750,12 +833,13 @@ async def sessions_cancel(session_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to cancel session: {str(e)}")
 
 @app.delete("/sessions/{session_id}")
-async def sessions_delete(session_id: str, purge: bool = False):
+async def sessions_delete(session_id: str, purge: bool = False, user: Dict = Depends(get_current_user)):
     """Delete a session record; optionally delete files with purge=true."""
     with sessions_lock:
         session = sessions.get(session_id)
         if not session:
             raise HTTPException(status_code=404, detail="Session not found")
+        _ensure_session_owner(session, _user_id_from_payload(user))
         transcriber = session.get('transcriber')
         status = session.get('status')
 
@@ -1045,8 +1129,28 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.websocket("/ws/session")
 async def websocket_session(websocket: WebSocket):
-    # Expect query param ?session_id=
+    # Expect query param ?session_id= and Authorization header Bearer token (or token= in query for browsers that can't set headers)
     session_id = websocket.query_params.get('session_id')
+    token = None
+    # Try header first
+    try:
+        auth_header = websocket.headers.get('authorization')
+        if auth_header:
+            token = _extract_bearer_token(auth_header)
+    except Exception:
+        token = None
+    # Fallback to query param
+    if not token:
+        token = websocket.query_params.get('token')
+    # Validate
+    try:
+        user = jwt.decode(token, _jwt_secret(), algorithms=['HS256']) if token else None
+        if not user:
+            await websocket.close(code=1008)
+            return
+    except Exception:
+        await websocket.close(code=1008)
+        return
     await session_ws.connect(websocket, session_id)
     
     try:

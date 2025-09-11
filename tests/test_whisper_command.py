@@ -100,4 +100,3 @@ if __name__ == '__main__':
         print("\n🎉 Test BERHASIL - Command whisper.cpp sudah benar!")
     else:
         print("\n💥 Test GAGAL - Masih ada masalah dengan command")
-

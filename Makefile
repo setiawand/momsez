@@ -32,6 +32,8 @@ help:
 	@echo "Utility Commands:"
 	@echo "  make shell          - Access running container shell"
 	@echo "  make health         - Check container health"
+	@echo "  make front-dev      - Start Next.js dev server (apps/frontend)"
+	@echo "  make back-dev       - Start FastAPI locally"
  	@echo "  make test           - Run test scripts"
 
 # Build commands
@@ -115,6 +117,15 @@ health:
 	@echo ""
 	@echo "API Health Check:"
 	@curl -f http://localhost:8000/health 2>/dev/null && echo "✅ API is healthy" || echo "❌ API is not responding"
+
+# Frontend / Backend local dev helpers
+front-dev:
+	@echo "Starting Next.js dev server on :3000 (ensure dependencies installed)"
+	@cd apps/frontend && npm run dev
+
+back-dev:
+	@echo "Starting FastAPI locally on :8000"
+	@python3 src/api_server.py
 
 # Tests (simple scripts; require local environment prerequisites)
 test:

@@ -124,6 +124,87 @@ The script records the microphone for N seconds (chunk) at 16 kHz mono, writes a
 
 This is a simple, robust approach. It is not a fully streaming, token-by-token transcription, but gives near-live results every chunk. If you need true streaming, consider compiling and using whisper.cpp's `stream` example and wrapping/parsing its stdout.
 
+## API Authentication (JWT)
+
+For web multi-user scenarios, session endpoints require a Bearer JWT. The server reads `JWT_SECRET` from the environment; set it in production. A simple dev login is provided:
+
+```
+# Dev login (issues a JWT for the provided user_id/username)
+curl -X POST http://localhost:8000/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"user_id":"alice","exp_minutes":60}'
+
+# Verify token
+curl http://localhost:8000/auth/verify \
+  -H "Authorization: Bearer $JWT"
+```
+
+Use the token in `Authorization: Bearer <JWT>` header for all session endpoints. For WebSocket per session, you may pass the token via header or `?token=` query param.
+
+## Session APIs (Recording & Ingest)
+
+The backend supports both device-capture sessions (server mic) and ingest sessions (browser uploads chunks). All session responses are scoped to the authenticated user.
+
+### Device-Capture Session
+
+```
+# Start (uses server microphone; restricts one session per device)
+curl -X POST http://localhost:8000/sessions/start \
+  -H "Authorization: Bearer $JWT" \
+  -H 'Content-Type: application/json' \
+  -d '{"language":"id","device_index":0}'
+
+# Status
+curl http://localhost:8000/sessions/$SID/status \
+  -H "Authorization: Bearer $JWT"
+
+# Stop + transcribe
+curl -X POST http://localhost:8000/sessions/$SID/stop \
+  -H "Authorization: Bearer $JWT"
+```
+
+### Ingest Session (Browser Upload)
+
+```
+# Start ingest session
+curl -X POST http://localhost:8000/sessions/start \
+  -H "Authorization: Bearer $JWT" \
+  -H 'Content-Type: application/json' \
+  -d '{"ingest":true, "language":"id"}'
+
+# Upload chunk(s)
+curl -X POST http://localhost:8000/sessions/$SID/ingest \
+  -H "Authorization: Bearer $JWT" \
+  -F 'file=@/path/to/chunk1.wav'
+
+# Finish (merge + transcribe)
+curl -X POST http://localhost:8000/sessions/$SID/finish \
+  -H "Authorization: Bearer $JWT"
+```
+
+### Session Management
+
+```
+# List user's sessions
+curl http://localhost:8000/sessions -H "Authorization: Bearer $JWT"
+
+# Cancel an active session (no transcription)
+curl -X POST http://localhost:8000/sessions/$SID/cancel -H "Authorization: Bearer $JWT"
+
+# Delete a session (and optionally purge files)
+curl -X DELETE 'http://localhost:8000/sessions/$SID?purge=true' \
+  -H "Authorization: Bearer $JWT"
+```
+
+### WebSocket Per Session
+
+```
+# Receive session events (started, chunk, completed)
+ws://localhost:8000/ws/session?session_id=$SID&token=$JWT
+```
+
+Events are JSON messages with fields like `type`, `session_id`, and additional data.
+
 ## Bahasa Indonesia
 
 ### Ringkasan

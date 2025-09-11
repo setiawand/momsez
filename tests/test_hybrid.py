@@ -8,8 +8,16 @@ import time
 import sys
 from pathlib import Path
 
-# Ensure 'src' is importable when running tests from project root
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+# Ensure backend src is importable when running tests from project root
+root = Path(__file__).resolve().parents[1]
+candidate_paths = [
+    root / 'apps' / 'backend' / 'src',
+    root / 'src',
+]
+for p in candidate_paths:
+    if p.exists():
+        sys.path.insert(0, str(p))
+        break
 from hybrid_transcribe import HybridTranscriber
 
 def test_hybrid_basic():
@@ -118,8 +126,8 @@ def check_prerequisites():
     
     checks = [
         ('configs/hybrid_config.json', Path('configs/hybrid_config.json').exists()),
-        ('src/hybrid_transcribe.py', Path('src/hybrid_transcribe.py').exists()),
-        ('src/live_transcribe.py', Path('src/live_transcribe.py').exists()),
+        ('src/hybrid_transcribe.py', (Path('src/hybrid_transcribe.py').exists() or Path('apps/backend/src/hybrid_transcribe.py').exists())),
+        ('src/live_transcribe.py', (Path('src/live_transcribe.py').exists() or Path('apps/backend/src/live_transcribe.py').exists())),
         ('whisper.cpp/stream', Path('whisper.cpp/stream').exists()),
         ('whisper.cpp/main', Path('whisper.cpp/main').exists()),
     ]
@@ -165,4 +173,3 @@ if __name__ == "__main__":
     else:
         print("❌ Some tests failed. Please check the errors above.")
         exit(1)
-
