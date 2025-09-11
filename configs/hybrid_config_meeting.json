@@ -1,0 +1,11 @@
+{
+  "output_dir": "output/hybrid_meeting",
+  "stream_bin": "./whisper.cpp/stream",
+  "whisper_bin": "./whisper.cpp/main",
+  "stream_model": "./whisper.cpp/models/ggml-small.bin",
+  "chunk_model": "./whisper.cpp/models/ggml-small.bin",
+  "language": "id",
+  "device_index": 1,
+  "chunk_duration": 30,
+  "stream_args": "--capture 1 --step 3000 --length 8000 --keep 300 --vad-thold 0.6"
+}

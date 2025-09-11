@@ -1,0 +1,110 @@
+services:
+  # Main application service
+  mom-transcript:
+    build: .
+    container_name: mom-transcript-app
+    ports:
+      - "8030:8000"  # Backend API
+    volumes:
+      - ./output:/app/output
+      - ./batch_output:/app/batch_output
+      - ./hybrid_output:/app/hybrid_output
+      - ./configs:/app/configs
+      - ./.transient:/app/.transient
+      # Audio device access
+      - /dev/snd:/dev/snd
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - PULSE_RUNTIME_PATH=/run/user/1000/pulse
+      - PULSE_NATIVE=1
+    privileged: true
+    profiles:
+      - full
+    networks:
+      - mom-transcript-net
+
+  # Batch transcription service
+  mom-transcript-batch:
+    build: .
+    container_name: mom-transcript-batch
+    volumes:
+      - ./output/batch:/app/output/batch
+      - ./batch_output:/app/batch_output
+      - ./configs:/app/configs
+      - /dev/snd:/dev/snd
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - TRANSCRIPTION_MODE=batch
+    command: ["python", "src/batch_transcribe.py"]
+    profiles:
+      - batch
+    networks:
+      - mom-transcript-net
+
+  # Hybrid transcription service
+  mom-transcript-hybrid:
+    build: .
+    container_name: mom-transcript-hybrid
+    volumes:
+      - ./output/hybrid:/app/output/hybrid
+      - ./hybrid_output:/app/hybrid_output
+      - ./configs:/app/configs
+      - /dev/snd:/dev/snd
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - TRANSCRIPTION_MODE=hybrid
+    command: ["python", "src/hybrid_transcribe.py"]
+    profiles:
+      - hybrid
+    networks:
+      - mom-transcript-net
+
+  # Live transcription service
+  mom-transcript-live:
+    build: .
+    container_name: mom-transcript-live
+    volumes:
+      - ./output/live:/app/output/live
+      - ./configs:/app/configs
+      - /dev/snd:/dev/snd
+    devices:
+      - /dev/snd:/dev/snd
+    environment:
+      - TRANSCRIPTION_MODE=live
+    command: ["python", "src/live_transcribe.py"]
+    profiles:
+      - live
+    networks:
+      - mom-transcript-net
+
+  # Development service with shell access
+  mom-transcript-dev:
+    build: .
+    container_name: mom-transcript-dev
+    ports:
+      - "8030:8000"
+      - "3030:3000"
+    volumes:
+      - .:/app
+    environment:
+      - DEVELOPMENT=true
+    command: ["/bin/bash", "-c", "pip install -r requirements.txt && cd /app && (python src/api_server.py &)"]
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+    networks:
+      - mom-transcript-net
+
+networks:
+  mom-transcript-net:
+    driver: bridge
+
+volumes:
+  output_data:
+  batch_data:
+  hybrid_data:
+  live_data:

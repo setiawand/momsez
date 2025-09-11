@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# OS
+.DS_Store
+
+# Transient and outputs
+.transient/
+output/
+hybrid_output/
+hybrid_output_meeting/
+batch_output/
+batch_output_meeting/
+uploads/
+test-results/
+
+# Logs
+*.log
+logs/
+
+# whisper.cpp build and models
+whisper.cpp/models/
+whisper.cpp/ggml.*
+whisper.cpp/main
+whisper.cpp/stream
+whisper.cpp/build/
+whisper.cpp/bin/
+
+# Node/Frontend (if any)
+node_modules/
+dist/
+build/

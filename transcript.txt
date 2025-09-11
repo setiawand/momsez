@@ -1,0 +1,1075 @@
+
+--- chunk #1 [0.0s - 10.4s] @ 2025-09-09 09:43:06 ---
+[suara penyanyi]
+
+--- chunk #2 [10.4s - 20.6s] @ 2025-09-09 09:43:20 ---
+Halo, nama saya Danny.
+ Deni
+
+--- chunk #3 [20.6s - 30.9s] @ 2025-09-09 09:43:32 ---
+ini saya mau berbagi sedikit cerita
+
+--- chunk #4 [30.9s - 41.1s] @ 2025-09-09 09:43:46 ---
+tentang bagaimana sebuah aplikasi itu dibuat.
+ Terima kasih.
+
+--- chunk #5 [41.1s - 51.4s] @ 2025-09-09 09:43:58 ---
+pembuatan aplikasi sangat masif sekarang.
+
+--- chunk #1 [0.0s - 10.3s] @ 2025-09-09 09:49:26 ---
+Selamat pagi, nama saya Danny.
+ Pagi ini saya akan bercerita sedikit tentang
+
+--- chunk #2 [10.3s - 20.7s] @ 2025-09-09 09:49:39 ---
+Pada zaman dahulu, aplikasi dibuat secara konvensional.
+
+--- chunk #3 [20.7s - 30.9s] @ 2025-09-09 09:49:51 ---
+Jadi, kalau dahulu aplikasi itu sebelum dibuat akan dianalisa terlebih dahulu.
+
+--- chunk #4 [30.9s - 41.2s] @ 2025-09-09 09:50:03 ---
+kelah akan diberikan kepada seorang programmer untuk dibuatkan aplikasinya.
+
+--- chunk #5 [41.2s - 51.3s] @ 2025-09-09 09:50:15 ---
+aplikasi selesai dibuat, maka programmer akan memberikan kepada tester atau quality assurance.
+
+--- chunk #6 [51.3s - 61.5s] @ 2025-09-09 09:50:28 ---
+Kualiti Assurance ini bertugas untuk mengecek apakah aplikasi sudah sesuai atau sudah terhindar
+
+--- chunk #7 [61.5s - 71.8s] @ 2025-09-09 09:50:43 ---
+sehingga user dapat menggunakannya dengan lancar.
+ (Tertawa)
+
+--- chunk #8 [71.8s - 82.1s] @ 2025-09-09 09:50:55 ---
+Selanjutnya, aplikasi sudah siap untuk di masukkan ke Server Production.
+
+--- chunk #9 [82.1s - 92.3s] @ 2025-09-09 09:51:12 ---
+seputar pembuatan aplikasi.
+ Terima kasih.
+ Terima kasih.
+ Terima kasih.
+
+=== stream session started 2025-09-09 09:59:16 ===
+error: unknown argument: --device
+usage: /Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/stream [options]
+options:
+  -h,       --help          [default] show this help message and exit
+  -t N,     --threads N     [10     ] number of threads to use during computation
+            --step N        [3000   ] audio step size in milliseconds
+            --length N      [10000  ] audio length in milliseconds
+            --keep N        [200    ] audio to keep from previous step in ms
+  -c ID,    --capture ID    [-1     ] capture device ID
+  -mt N,    --max-tokens N  [32     ] maximum number of tokens per audio chunk
+  -ac N,    --audio-ctx N   [0      ] audio context size (0 - all)
+  -vth N,   --vad-thold N   [0.60   ] voice activity detection threshold
+  -fth N,   --freq-thold N  [100.00 ] high-pass frequency cutoff
+  -su,      --speed-up      [false  ] speed up audio by x2 (reduced accuracy)
+  -tr,      --translate     [false  ] translate from source language to english
+  -ps,      --print-special [false  ] print special tokens
+  -kc,      --keep-context  [false  ] keep context between audio chunks
+  -l LANG,  --language LANG [id     ] spoken language
+  -m FNAME, --model FNAME   [/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin] model path
+  -f FNAME, --file FNAME    [       ] text output file name
+
+=== stream session started 2025-09-09 10:01:57 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 8000 samples (step = 0.5 sec / len = 4.0 sec / keep = 0.2 sec), 10 threads, lang = id, task = transcribe, timestamps = 0 ...
+main: n_new_line = 7, no_context = 1
+[Start speaking][2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.
+[2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+ (suara)[2K
+                                                                                                    [2K
+ Siam.[2K
+                                                                                                    [2K
+ Siam.[2K
+                                                                                                    [2K
+ Siam.[2K
+                                                                                                    [2K
+ Siam.[2K
+                                                                                                    [2K
+ hmm siang
+[2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+ Sampai jumpa di channel ini.[2K
+                                                                                                    [2K
+ Namasaya ni.[2K
+                                                                                                    [2K
+ Namasaya ni.[2K
+                                                                                                    [2K
+ Namasaya ni.[2K
+                                                                                                    [2K
+ Namasaya ni.[2K
+                                                                                                    [2K
+ Namasaya ni.
+[2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Sampai jumpa![2K
+                                                                                                    [2K
+ Sampai jumpa![2K
+                                                                                                    [2K
+ Sampai jumpa di bawah.[2K
+                                                                                                    [2K
+ terlalu cerat bagian
+[2K
+                                                                                                    [2K
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+
+=== stream session started 2025-09-09 10:05:08 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 48000 samples (step = 3.0 sec / len = 10.0 sec / keep = 0.2 sec), 10 threads, lang = id, task = transcribe, timestamps = 0 ...
+main: n_new_line = 2, no_context = 1
+[Start speaking][2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Hello.
+[2K
+                                                                                                    [2K
+ Selamat tinggal.[2K
+                                                                                                    [2K
+ Selamat tinggal.
+[2K
+                                                                                                    [2K
+ Suara saya terdengar[2K
+                                                                                                    [2K
+ Suara saya terdengar
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.
+[2K
+                                                                                                    [2K
+ Hmm[2K
+                                                                                                    [2K
+ Ternyata tidak begitu bagus
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Sshhh!
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Model stream
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Terima kasih.
+[2K
+                                                                                                    [2K
+ Rasa[2K
+                                                                                                    [2K
+ rasa tidak bagus juga
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+
+=== stream session started 2025-09-09 10:07:55 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:10:03 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:10:50 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:12:35 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:15:39 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:16:20 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 2 : 'MacBook Pro Microphone' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 0 samples (step = 0.0 sec / len = 20.0 sec / keep = 0.0 sec), 4 threads, lang = id, task = transcribe, timestamps = 1 ...
+main: using VAD, will transcribe on speech activity
+
+=== stream session started 2025-09-09 10:17:01 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 48000 samples (step = 3.0 sec / len = 10.0 sec / keep = 0.5 sec), 4 threads, lang = id, task = transcribe, timestamps = 0 ...
+main: n_new_line = 2, no_context = 1
+[Start speaking][2K
+                                                                                                    [2K
+ ini ini[2K
+                                                                                                    [2K
+ "Tis, Tis, Apakah Sekarang Terdengar?"
+[2K
+                                                                                                    [2K
+ terdengar suara saya[2K
+                                                                                                    [2K
+ terdengar suara saya
+[2K
+                                                                                                    [2K
+ Asli[2K
+                                                                                                    [2K
+ masih seperti itu
+[2K
+                                                                                                    [2K
+ terima kasih.[2K
+                                                                                                    [2K
+ Oke.
+[2K
+                                                                                                    [2K
+ Oke ini sepertinya lebih bagus[2K
+                                                                                                    [2K
+ Oke ini sepertinya lebih bagus
+[2K
+                                                                                                    [2K
+ [suara perbincangan][2K
+                                                                                                    [2K
+ (tentu, saya tidak bisa mengerti) (tentu, saya tidak bisa mengerti) (tentu, saya tidak bisa mengerti)
+[2K
+                                                                                                    [2K
+ Oke, kita mulai dari ini.[2K
+                                                                                                    [2K
+ Oke, kita mulai dari mana ya?
+[2K
+                                                                                                    [2K
+ [suara perbincangan][2K
+                                                                                                    [2K
+ Kekasihkan kaki dengan kaki yang dihidupkan di atas kaki.
+[2K
+                                                                                                    [2K
+ 15 akan[2K
+                                                                                                    [2K
+ Mungkin saya akan membacakan sebuah artikel.
+[2K
+                                                                                                    [2K
+ S.[2K
+                                                                                                    [2K
+ Sampai jumpa di bawah.
+[2K
+                                                                                                    [2K
+ (suara perang)[2K
+                                                                                                    [2K
+ atau membacakan
+[2K
+                                                                                                    [2K
+ Salaman[2K
+                                                                                                    [2K
+ Salaman tentang MEC Aksesoris.
+[2K
+                                                                                                    [2K
+ Ssss[2K
+                                                                                                    [2K
+ S
+[2K
+                                                                                                    [2K
+ di halaman[2K
+                                                                                                    [2K
+ Oke di halaman make accessoris, Anda nampak
+[2K
+                                                                                                    [2K
+ namanya Laci1b Mobile SS[2K
+                                                                                                    [2K
+ namanya Laci1b Mobile SSD.
+[2K
+                                                                                                    [2K
+ (suara perlindungan)[2K
+                                                                                                    [2K
+ [suara pembentangan]
+[2K
+                                                                                                    [2K
+ okurannya 1T[2K
+                                                                                                    [2K
+ ukurannya 1 terabyte
+[2K
+                                                                                                    [2K
+ (suara perlindungan)[2K
+                                                                                                    [2K
+ [suara perintah]
+[2K
+                                                                                                    [2K
+ SSD Secure USB[2K
+                                                                                                    [2K
+ SSD Secure USB-C Drive
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ Arganya, Sarah.
+[2K
+                                                                                                    [2K
+ *149,11*[2K
+                                                                                                    [2K
+ $149,95
+[2K
+                                                                                                    [2K
+ Kita akan membuat video ini.[2K
+                                                                                                    [2K
+ Kita akan membuat video ini.
+[2K
+                                                                                                    [2K
+ Mariki Tak[2K
+                                                                                                    [2K
+ mari kita ke alaman
+[2K
+                                                                                                    [2K
+ Alaman Berita[2K
+                                                                                                    [2K
+ Alaman Berita
+[2K
+                                                                                                    [2K
+ (Saya akan mengeluarkan perjalanan)[2K
+                                                                                                    [2K
+ (Saya akan menggunakan perangkian)
+[2K
+                                                                                                    [2K
+ (suara perbincangan)[2K
+                                                                                                    [2K
+ [suara perbincangan]
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ (suara penyanyi)
+[2K
+                                                                                                    [2K
+ (suara perbincangan)[2K
+                                                                                                    [2K
+ [suara pembentuk]
+[2K
+                                                                                                    [2K
+ [suara pembukaan][2K
+                                                                                                    [2K
+ (suara di atas)
+[2K
+                                                                                                    [2K
+ Kami akan membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan untuk membuat perjalanan[2K
+                                                                                                    [2K
+ Ini dari kompas.com.
+[2K
+                                                                                                    [2K
+ Judulnya[2K
+                                                                                                    [2K
+ judulnya resmi
+[2K
+                                                                                                    [2K
+ Daftar baru Pemerintahan Menteri[2K
+                                                                                                    [2K
+ Daftar baru Pemerintahan Menteri Kabinet Merah Putih Prabowo Gibran
+[2K
+                                                                                                    [2K
+ Terima kasih.[2K
+                                                                                                    [2K
+ [suara perbincangan]
+[2K
+                                                                                                    [2K
+ Presiden Prabhu Subhiantong Lampak[2K
+                                                                                                    [2K
+ Presiden Prabhu Subhantong lakukan perombakan atau risaful
+[2K
+                                                                                                    [2K
+ pada seni tangga 8 bulan.[2K
+                                                                                                    [2K
+ pada Senin tangga 8 bulan 9-2025.
+[2K
+                                                                                                    [2K
+ Dela[2K
+                                                                                                    [2K
+ Dalam risafol kali ini, 4 Menteri digan.
+[2K
+                                                                                                    [2K
+ Jadi diganti sementara satu kementerian baru.[2K
+                                                                                                    [2K
+ di ganti sementara satu kementerian baru yaitu kementerian Haji dan Umum.
+[2K
+                                                                                                    [2K
+ dan umrah resmi di bentuk setelah mencari[2K
+                                                                                                    [2K
+ dan umroh resmi di bentuk setelah mendapat pengesahan dari Dewan Perwakilan Rakyat.
+[2K
+                                                                                                    [2K
+ perkilangan rakyat atau DPR.[2K
+                                                                                                    [2K
+ Pakilan Rakyat atau DPR. Sejumlah metri yang tidak lagi
+[2K
+                                                                                                    [2K
+ tidak lagi menjabat, ya nih, menko politik[2K
+                                                                                                    [2K
+ tidak lagi menjabat, yakni, menko politik dan keamanan, atau polkam, budi gunawan,
+[2K
+                                                                                                    [2K
+ Gunawan, Menteri Keuangan Seri Mulian[2K
+                                                                                                    [2K
+ Menteri Keuangan Sri Mulyani, Menteri Pemuda dan Olahraga
+[2K
+                                                                                                    [2K
+ Olaraga Menpora dito aritejo.[2K
+                                                                                                    [2K
+ Olaraga Menpora Dito Aritejo, Bantry Koperasi Budi Arise,
+[2K
+                                                                                                    [2K
+ Ari Setiali dan Menteri[2K
+                                                                                                    [2K
+ Ari Setiali dan Menteri Perlindungan Pekerja Migran Indonesia
+[2K
+                                                                                                    [2K
+ Indonesia Abdul Kadir Carding[2K
+                                                                                                    [2K
+ Indonesia Abdul Kadir Carding. Sebagai gantinya,
+[2K
+                                                                                                    [2K
+ Kursi MENCU kini diisi oleh[2K
+                                                                                                    [2K
+ Kursi Menkeu kini diisi oleh Purbaya Yudi Sadewa.
+[2K
+                                                                                                    [2K
+ mentik mentri kooperasi di tempat ini[2K
+                                                                                                    [2K
+ mentik mentri kooperasi di tempati veri julian tono sedangkan
+[2K
+                                                                                                    [2K
+ Mokhtarad, Mokhtaruddin ditunjuk.[2K
+                                                                                                    [2K
+ Mokhtaruddin ditunjuk sebagai Menteri P2MI.
+[2K
+                                                                                                    [2K
+ Ada pun kursus.[2K
+                                                                                                    [2K
+ Ada pun kursimen "ko pol hu kam" masih diberikan.
+[2K
+                                                                                                    [2K
+ masih kosong karena belum ditemukan[2K
+                                                                                                    [2K
+ masih kosong karena belum ditemukan atau ditentukan penggantinya.
+[2K
+                                                                                                    [2K
+ sementara itu pengganti main pora[2K
+                                                                                                    [2K
+ Sementara itu, pengganti main pora di Toaritejo belum dilantikkan.
+[2K
+                                                                                                    [2K
+ nanti karena masih berada di luar kota.[2K
+                                                                                                    [2K
+ karena masih berada di luar kota. Disisi lain, Prabowo juga melan.
+[2K
+                                                                                                    [2K
+ juga melanti, Mughamman Irfan Yusuf sebagai[2K
+                                                                                                    [2K
+ juga melanti, M. Irfan Yusuf sebagai Menteri Haji dan Umrah dan Dhani.
+[2K
+                                                                                                    [2K
+ dan Daniel I. Daniel Ansar Simanjunta[2K
+                                                                                                    [2K
+ dan Daniel I. Daniel Ansar Siman Juntag sebagai wakil menteri, haji, dan umur.
+[2K
+                                                                                                    [2K
+ kemudian umrokan[2K
+                                                                                                    [2K
+ dan umrokan. Daftar baru, kabinet merah put.
+[2K
+                                                                                                    [2K
+ merah putih Prabowo Gibran.[2K
+                                                                                                    [2K
+ merah putih Prabogo Gibran. Setelah resiaful, Kabinet Prabogo
+[2K
+                                                                                                    [2K
+ jumlah Menteri yang menja... yang menja...[2K
+                                                                                                    [2K
+ jumlah Menteri yang menjambat di pemerintahan saat ini bertambah menjadi
+[2K
+                                                                                                    [2K
+ menjadi 49 orang.[2K
+                                                                                                    [2K
+ menjadi 49 orang. Berikut daftar terbaru Menteri Kabinet
+[2K
+                                                                                                    [2K
+ Kabinet Merah Putih setelah Risafol Kabinet Permanah Pertama.[2K
+                                                                                                    [2K
+ Kabinet Merah Putih setelah Risafol Kabinet Prabowo pada 989.
+[2K
+                                                                                                    [2K
+ Lalu, diberikan 9/2020.[2K
+                                                                                                    [2K
+ dan sebilan 2025.
+[2K
+                                                                                                    [2K
+ satu ad interim menunggu penggunaan[2K
+                                                                                                    [2K
+ Satu adi interim menunggu pengganti Menteri Koordinator Politik
+[2K
+                                                                                                    [2K
+ politik dan keamanan.[2K
+                                                                                                    [2K
+ politik dan keamanan. 2. Yusreel Ishamahendra, Menteri Kota
+[2K
+                                                                                                    [2K
+ Kondinator Hukum, Ham, Immigrasi, dan Pemasya.[2K
+                                                                                                    [2K
+ Menteri Koordinator Hukum, Ham, Immigrasi dan Pemasyarakatan. 3.
+[2K
+                                                                                                    [2K
+ Air Langga Hartarto, Menteri Kota[2K
+                                                                                                    [2K
+ Airlangga Harta-Rto, Menteri Koordinator Perekonomian
+[2K
+                                                                                                    [2K
+ 4. Pratikno Menteri Koordinator Pembangun[2K
+                                                                                                    [2K
+ 4. Pratikno, Menteri Koordinator Pembangunan Manusia dan Kebudayaan
+[2K
+                                                                                                    [2K
+ 5 Agus Harimurti Yudhoyono, Menteri,[2K
+                                                                                                    [2K
+ 5. Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Koordinator Infrastruktur dan Pembangunan Ke-5 Agus Harimurti Yudoyono, Menteri Ko
+[2K
+                                                                                                    [2K
+ ke wilayahan. Nam, Mohai Mekong.[2K
+                                                                                                    [2K
+ Kewilayahan 6. Muhamin Iskander, Menteri Koordinator Pembeza
+[2K
+                                                                                                    [2K
+ Pemberdayaan Masyarakat[2K
+                                                                                                    [2K
+ Pemberdayaan Masyarakat 7. Sulkit Flihasan
+[2K
+                                                                                                    [2K
+ Menteri Koordinator Pangan[2K
+                                                                                                    [2K
+ Menteri Koordinator Pangan, 8, Prasetyo Hadid, Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri Menteri
+[2K
+                                                                                                    [2K
+ Menteri Sekartaris Negara, 9[2K
+                                                                                                    [2K
+ Menteri Sekartaris Negara 9. Muhammad Tito Karnavyan, Menteri Darjad
+[2K
+                                                                                                    [2K
+ Menteri dalam negeri.[2K
+                                                                                                    [2K
+ 10. Sugiyono, Menteri Luar Negeri, 11.
+[2K
+                                                                                                    [2K
+ 11 Savri Samsuddin, Menteri Pertahanan[2K
+                                                                                                    [2K
+ 11 Safri Samsuddin, Menteri Pertahanan, 12 Nazaruddin Umar
+[2K
+                                                                                                    [2K
+ Menteri Agama 13 Suprakman[2K
+                                                                                                    [2K
+ Menteri Agama, 13 Suprakmanan di Agitas Menteri Hukum
+[2K
+                                                                                                    [2K
+ 14. Natalius III[2K
+                                                                                                    [2K
+ 14. Natalius III menteri hak asasi manusia atau ham.
+[2K
+                                                                                                    [2K
+ 15 Agus Andrianto[2K
+                                                                                                    [2K
+ 15 Agus Andrianto, Menteri Immigrasi dan Pemesyarakatan
+[2K
+                                                                                                    [2K
+ Rakyatan 16 Purbaya[2K
+                                                                                                    [2K
+ 16. Purbaya Yudhisadewa Menteri Keuangan
+[2K
+                                                                                                    [2K
+ 17. Abdul Mugti, Menteri Pendidikan[2K
+                                                                                                    [2K
+ 17. Abdul Muhti, Menteri Pendidikan Dasar dan Menengah. 18. Ber...
+[2K
+                                                                                                    [2K
+ Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama, Pertama[2K
+                                                                                                    [2K
+ Prian Yulyarto, Menteri Penerikan Tinggi Science dan Teknologi
+[2K
+                                                                                                    [2K
+ 18. Fadli Zon, Menteri Kebudaya[2K
+                                                                                                    [2K
+ 18. Fadlizon, Menteri Kebudayaan. 20. Budi Gondi.
+[2K
+                                                                                                    [2K
+ budi guna di sadikin Menteri Kesehatan[2K
+                                                                                                    [2K
+ Bu digunadi sadikin Menteri Kesehatan, 21, saya puluh Yusuf Menteri Sur.
+[2K
+                                                                                                    [2K
+ Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri sosial 22 Yasierta Menteri[2K
+                                                                                                    [2K
+ Menteri sosial, 22 Yassir, tak Menteri Ketanaga Kerjaan, dan masih panjang
+[2K
+                                                                                                    [2K
+ dan panjang aduh capeknya[2K
+                                                                                                    [2K
+ dan panjang aduh capeknya
+[2K
+                                                                                                    [2K
+ (suara perbincangan)[2K
+                                                                                                    [2K
+
+=== stream session started 2025-09-09 10:27:10 ===
+init: found 3 capture devices:
+init:    - Capture device #0: 'iPhone Microphone'
+init:    - Capture device #1: 'AirPods Pro Deni'
+init:    - Capture device #2: 'MacBook Pro Microphone'
+init: attempt to open capture device 1 : 'AirPods Pro Deni' ...
+init: obtained spec for input device (SDL Id = 2):
+init:     - sample rate:       16000
+init:     - format:            33056 (required: 33056)
+init:     - channels:          1 (required: 1)
+init:     - samples per frame: 1024
+whisper_init_from_file: loading model from '/Users/denisetiawan/Documents/work/mom-transcript/whisper.cpp/models/ggml-small.bin'
+whisper_model_load: loading model
+whisper_model_load: n_vocab       = 51865
+whisper_model_load: n_audio_ctx   = 1500
+whisper_model_load: n_audio_state = 768
+whisper_model_load: n_audio_head  = 12
+whisper_model_load: n_audio_layer = 12
+whisper_model_load: n_text_ctx    = 448
+whisper_model_load: n_text_state  = 768
+whisper_model_load: n_text_head   = 12
+whisper_model_load: n_text_layer  = 12
+whisper_model_load: n_mels        = 80
+whisper_model_load: f16           = 1
+whisper_model_load: type          = 3
+whisper_model_load: mem required  = 1027.00 MB (+   16.00 MB per decoder)
+whisper_model_load: kv self size  =   15.75 MB
+whisper_model_load: kv cross size =   52.73 MB
+whisper_model_load: adding 1608 extra tokens
+whisper_model_load: model ctx     =  464.56 MB
+whisper_model_load: model size    =  464.44 MB
+main: processing 48000 samples (step = 3.0 sec / len = 10.0 sec / keep = 0.5 sec), 4 threads, lang = en, task = transcribe, timestamps = 0 ...
+main: n_new_line = 2, no_context = 1
+[Start speaking][2K
+                                                                                                    [2K
+ [Bell rings][2K
+                                                                                                    [2K
+ Okay.
+[2K
+                                                                                                    [2K
+ Now I'm gonna read in English.[2K
+                                                                                                    [2K
+ Now I'm gonna read in English
+[2K
+                                                                                                    [2K
+ So I search to Google[2K
+                                                                                                    [2K
+ So I search to Google search.
+[2K
+                                                                                                    [2K
+ What is LLM?[2K
+                                                                                                    [2K
+ What is LLM?
+[2K
+                                                                                                    [2K
+ I'll AI overview from Google.[2K
+                                                                                                    [2K
+ AI Poggle View from Google respond an AI Poggle View
+[2K
+                                                                                                    [2K
+ an LLM or large language[2K
+                                                                                                    [2K
+ an LLM or large language model is a type of article.
+[2K
+                                                                                                    [2K
+ of artificial intelligence that and the[2K
+                                                                                                    [2K
+ of artificial intelligence that understands and generates human language.
+[2K
+                                                                                                    [2K
+ which by being trained on massive[2K
+                                                                                                    [2K
+ by being trained on massive datasets. LLMs use
+[2K
+                                                                                                    [2K
+ use deep learning often with[2K
+                                                                                                    [2K
+ use deep learning often with transformer architectures to it.
+[2K
+                                                                                                    [2K
+ To identify patterns, translate text, and[2K
+                                                                                                    [2K
+ To identify patterns, translate text, answer questions, summarize content,
+[2K
+                                                                                                    [2K
+ and perform other tasks.[2K
+                                                                                                    [2K
+ and perform other tasks through natural language processing or
+[2K
+                                                                                                    [2K
+ or NLP. Examples[2K
+                                                                                                    [2K
+ or NLP. Examples of LLM
+[2K
+                                                                                                    [2K
+ Analyze lamps include chat GPT and Google.[2K
+                                                                                                    [2K
+ Analyze includes chat GPT and Google Jiminy which power make
+[2K
+                                                                                                    [2K
+ many generative AI applications.[2K
+                                                                                                    [2K
+ many generative AI applications. How LLM's work
+[2K
+                                                                                                    [2K
+ work. First deep learning.[2K
+                                                                                                    [2K
+ work. First, deep learning. LMS are this
+[2K
+                                                                                                    [2K
+ based on deep learning architecture,[2K
+                                                                                                    [2K
+ Based on deep learning architecture such as the transformer model which
+[2K
+                                                                                                    [2K
+ which are a type of neural network.[2K
+                                                                                                    [2K
+ which are a type of neural network. VES data del
+[2K
+                                                                                                    [2K
+ They learn by processing enormous amounts of[2K
+                                                                                                    [2K
+ They learn by processing enormous amounts of text data, allowing them to understand
+[2K
+                                                                                                    [2K
+ 10. Language Rules, Context and New In[2K
+                                                                                                    [2K
+ 10. Language Rules, Contexts and Newins. 3.
+[2K
+                                                                                                    [2K
+ Pattern recognition.[2K
+                                                                                                    [2K
+ pattern recognition. Through this training, LLM identify statistics.
+[2K
+                                                                                                    [2K
+ statistically patterns in the data and[2K
+                                                                                                    [2K
+ statistically patterns in the data, enabling them to predict and generate coherent patterns.
+[2K
+                                                                                                    [2K
+ coherence, text.[2K
+                                                                                                    [2K
+ coherence, tax. 4. Attention Mechanism
+[2K
+                                                                                                    [2K
+ A key component is the attention mechanism.[2K
+                                                                                                    [2K
+ A key component is the attention mechanism
+[2K
+                                                                                                    [2K
+ which allows the model to focus on relevant parts.[2K
+                                                                                                    [2K
+ which allows the model to focus on relevant parts of the input text when generating output.
+[2K
+                                                                                                    [2K
+ understanding relationships between[2K
+                                                                                                    [2K
+ understanding relationships between words even they are
+[2K
+                                                                                                    [2K
+ are far apart and so on.[2K
+                                                                                                    [2K
+ far apart and so on. Thank you.
+[2K
+                                                                                                    [2K
+ Thank you.[2K
+                                                                                                    [2K

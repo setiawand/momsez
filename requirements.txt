@@ -1,0 +1,33 @@
+# Core FastAPI and web server dependencies
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+websockets==12.0
+python-multipart==0.0.9
+aiofiles==23.2.1
+
+# Audio processing and device management
+sounddevice==0.4.6
+soundfile==0.12.1
+# Use a NumPy version compatible with Python 3.13+
+numpy>=2.1.1
+
+# Data validation and serialization
+# Pydantic v2 with Python 3.13 support (pulls compatible pydantic-core wheels)
+pydantic>=2.9.0,<3
+
+# HTTP client for health checks
+httpx==0.27.2
+
+# System and file operations
+# pathlib backport not needed on Python 3; remove to avoid install issues on 3.13
+
+# Optional: For enhanced audio processing
+# scipy==1.11.4
+# librosa==0.10.1
+
+# Auth (JWT)
+PyJWT==2.8.0
+
+# Development and testing (optional)
+# pytest==7.4.3
+# pytest-asyncio==0.21.1
