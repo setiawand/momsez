@@ -3,12 +3,14 @@ import useSWR from 'swr'
 import Link from 'next/link'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent } from '../../components/ui/card'
-import { apiBase, authHeaders } from '../../lib/api'
+import { Modal } from '../../components/ui/modal'
+import { apiBase, authHeaders, transcriptContentUrl } from '../../lib/api'
 
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
 
 export default function SessionsPage() {
   const { data, error, isLoading, mutate } = useSWR(`${apiBase()}/sessions`, fetcher, { refreshInterval: 4000 })
+  const [preview, setPreview] = useState<{open: boolean, title?: string, content?: string, loading?: boolean}>({ open: false })
 
   return (
     <main className="space-y-4">
@@ -31,12 +33,28 @@ export default function SessionsPage() {
               </div>
               <div className="text-sm text-muted-foreground">Start: {s.start_time || '-'}</div>
               {s.transcript_path && (
-                <div className="text-xs"><a className="underline" href={`${apiBase().replace(/\/$/, '')}/${s.transcript_path}`} target="_blank">Transcript</a></div>
+                <div className="text-xs"><button className="underline" onClick={async ()=>{
+                  setPreview({ open: true, title: 'Transcript preview', loading: true })
+                  try {
+                    const res = await fetch(transcriptContentUrl(s.transcript_path), { headers: authHeaders() })
+                    const data = await res.json()
+                    setPreview({ open: true, title: data.filename || 'Transcript', content: data.content, loading: false })
+                  } catch (e:any) {
+                    setPreview({ open: true, title: 'Error', content: String(e), loading: false })
+                  }
+                }}>Preview</button></div>
               )}
             </CardContent>
           </Card>
         ))}
       </div>
+      <Modal open={preview.open} onClose={()=>setPreview({ open: false })} title={preview.title}>
+        {preview.loading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : (
+          <pre className="whitespace-pre-wrap text-sm">{preview.content || ''}</pre>
+        )}
+      </Modal>
     </main>
   )
 }

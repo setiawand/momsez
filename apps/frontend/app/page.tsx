@@ -1,18 +1,27 @@
 "use client"
 import useSWR from 'swr'
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
-import { apiBase, authHeaders } from '../lib/api'
+import { useEffect, useMemo, useState } from 'react'
+import { apiBase, authHeaders, transcriptContentUrl } from '../lib/api'
 import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
+import { Modal } from '../components/ui/modal'
 
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
 
 export default function Home() {
   const { data: sessions, isLoading, error, mutate } = useSWR(`${apiBase()}/sessions`, fetcher, { refreshInterval: 4000 })
   const { data: health } = useSWR(`${apiBase()}/health`, (u)=>fetch(u).then(r=>r.json()), { refreshInterval: 15000 })
-  const token = typeof window !== 'undefined' ? localStorage.getItem('MOMSEZ_JWT') : null
+  const [signedIn, setSignedIn] = useState<null | boolean>(null)
+  useEffect(() => {
+    try {
+      setSignedIn(!!localStorage.getItem('MOMSEZ_JWT'))
+    } catch {
+      setSignedIn(false)
+    }
+  }, [])
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [preview, setPreview] = useState<{open: boolean, title?: string, content?: string, loading?: boolean}>({ open: false })
 
   const filtered = useMemo(() => {
     const list = Array.isArray(sessions) ? sessions : []
@@ -28,8 +37,7 @@ export default function Home() {
           <div className="text-sm text-muted-foreground">Monitor sessions, start new captures, and view transcripts</div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/sessions/start"><Button>Start Session</Button></Link>
-          <Link href="/ingest"><Button variant="secondary">Open Ingest</Button></Link>
+          <Link href="/ingest"><Button>Record in Browser</Button></Link>
         </div>
       </div>
 
@@ -37,8 +45,8 @@ export default function Home() {
         <Card>
           <CardContent className="py-4">
             <div className="text-sm text-muted-foreground">Auth</div>
-            <div className="text-lg font-medium mt-1">{token ? 'Signed In' : 'Not Signed In'}</div>
-            <div className="mt-3"><Link href="/login"><Button size="sm" variant="ghost">{token ? 'Refresh Token' : 'Login'}</Button></Link></div>
+            <div className="text-lg font-medium mt-1">{signedIn === null ? 'Checking…' : signedIn ? 'Signed In' : 'Not Signed In'}</div>
+            <div className="mt-3"><Link href="/login"><Button size="sm" variant="ghost">{signedIn ? 'Refresh Token' : 'Login'}</Button></Link></div>
           </CardContent>
         </Card>
         <Card>
@@ -91,7 +99,16 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {s.transcript_path && (
-                      <a className="text-sm underline" href={`${apiBase().replace(/\/$/, '')}/${s.transcript_path}`} target="_blank">Transcript</a>
+                      <button className="text-sm underline" onClick={async ()=>{
+                        setPreview({ open: true, title: 'Transcript preview', loading: true })
+                        try {
+                          const res = await fetch(transcriptContentUrl(s.transcript_path), { headers: authHeaders() })
+                          const data = await res.json()
+                          setPreview({ open: true, title: data.filename || 'Transcript', content: data.content, loading: false })
+                        } catch (e:any) {
+                          setPreview({ open: true, title: 'Error', content: String(e), loading: false })
+                        }
+                      }}>Preview</button>
                     )}
                     <Link href={`/sessions/${s.session_id}`}><Button size="sm" variant="secondary">Open</Button></Link>
                   </div>
@@ -105,6 +122,14 @@ export default function Home() {
           </div>
         </CardContent>
       </Card>
+
+      <Modal open={preview.open} onClose={()=>setPreview({ open: false })} title={preview.title}>
+        {preview.loading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : (
+          <pre className="whitespace-pre-wrap text-sm">{preview.content || ''}</pre>
+        )}
+      </Modal>
     </main>
   )
 }

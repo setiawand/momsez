@@ -1,10 +1,11 @@
 "use client"
 import useSWR from 'swr'
 import { useEffect, useState } from 'react'
-import { apiBase, authHeaders, wsUrl } from '../../../lib/api'
+import { apiBase, authHeaders, wsUrl, transcriptContentUrl } from '../../../lib/api'
 import { Button } from '../../../components/ui/button'
 import { Card, CardContent } from '../../../components/ui/card'
 import { useParams } from 'next/navigation'
+import { Modal } from '../../../components/ui/modal'
 
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
 
@@ -13,6 +14,7 @@ export default function SessionDetail() {
   const id = params.id
   const { data, mutate } = useSWR(`${apiBase()}/sessions/${id}/status`, fetcher)
   const [events, setEvents] = useState<string[]>([])
+  const [preview, setPreview] = useState<{open: boolean, title?: string, content?: string, loading?: boolean}>({ open: false })
 
   useEffect(() => {
     const token = localStorage.getItem('MOMSEZ_JWT') || ''
@@ -46,7 +48,16 @@ export default function SessionDetail() {
         <Button onClick={stop}>Stop</Button>
         <Button variant="ghost" onClick={cancel}>Cancel</Button>
         {data?.transcript_path && (
-          <a className="btn btn-secondary" href={`${apiBase().replace(/\/$/, '')}/${data.transcript_path}`} target="_blank">Download transcript</a>
+          <button className="btn btn-secondary" onClick={async ()=>{
+            setPreview({ open: true, title: 'Transcript preview', loading: true })
+            try {
+              const res = await fetch(transcriptContentUrl(data.transcript_path), { headers: authHeaders() })
+              const d = await res.json()
+              setPreview({ open: true, title: d.filename || 'Transcript', content: d.content, loading: false })
+            } catch (e:any) {
+              setPreview({ open: true, title: 'Error', content: String(e), loading: false })
+            }
+          }}>Preview transcript</button>
         )}
       </div>
       <Card>
@@ -55,6 +66,14 @@ export default function SessionDetail() {
           <pre className="bg-muted rounded-md p-3 max-h-60 overflow-auto whitespace-pre-wrap text-sm">{events.join('\n')}</pre>
         </CardContent>
       </Card>
+
+      <Modal open={preview.open} onClose={()=>setPreview({ open: false })} title={preview.title}>
+        {preview.loading ? (
+          <div className="text-sm text-muted-foreground">Loading…</div>
+        ) : (
+          <pre className="whitespace-pre-wrap text-sm">{preview.content || ''}</pre>
+        )}
+      </Modal>
     </main>
   )
 }

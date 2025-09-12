@@ -14,3 +14,36 @@ export function wsUrl(path: string) {
   return u.toString()
 }
 
+// Build a safe download URL for a transcript/audio path returned by the API.
+// Normalizes absolute container paths like "/app/output/..." to relative "output/..."
+export function transcriptDownloadUrl(filePath?: string | null) {
+  if (!filePath) return '#'
+  const p = String(filePath)
+  const idx = p.indexOf('/output/')
+  let rel = p
+  if (idx >= 0) {
+    rel = p.slice(idx + 1) // drop the leading slash -> output/...
+  } else if (p.startsWith('output/')) {
+    rel = p
+  } else {
+    // best-effort: strip all leading slashes
+    rel = p.replace(/^\/+/, '')
+  }
+  return `${apiBase().replace(/\/$/, '')}/transcription/download/${rel}`
+}
+
+// Build a content URL (JSON response with transcript text)
+export function transcriptContentUrl(filePath?: string | null) {
+  if (!filePath) return '#'
+  const p = String(filePath)
+  const idx = p.indexOf('/output/')
+  let rel = p
+  if (idx >= 0) {
+    rel = p.slice(idx + 1)
+  } else if (p.startsWith('output/')) {
+    rel = p
+  } else {
+    rel = p.replace(/^\/+/, '')
+  }
+  return `${apiBase().replace(/\/$/, '')}/transcription/content/${rel}`
+}
