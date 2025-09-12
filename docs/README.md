@@ -82,7 +82,7 @@ If you are on macOS, the first time you access the microphone you may need to gr
 
 ```
 # Chunked mode (default):
-python live_transcribe.py --mode chunks \
+python apps/backend/src/live_transcribe.py --mode chunks \
   --whisper-bin /path/to/whisper.cpp/main \
   --model /path/to/model.bin \
   --language auto \
@@ -90,7 +90,7 @@ python live_transcribe.py --mode chunks \
   --output transcript.txt
 
 # Streaming mode (more live):
-python live_transcribe.py --mode stream \
+python apps/backend/src/live_transcribe.py --mode stream \
   --stream-bin /path/to/whisper.cpp/examples/stream/stream \
   --model /path/to/model.bin \
   --language auto \
@@ -238,7 +238,7 @@ pip install -r requirements.txt
 
 ```
 # Mode chunk (default):
-python live_transcribe.py --mode chunks \
+python apps/backend/src/live_transcribe.py --mode chunks \
   --whisper-bin /path/ke/whisper.cpp/main \
   --model /path/ke/model.bin \
   --language id \
@@ -246,7 +246,7 @@ python live_transcribe.py --mode chunks \
   --output transcript.txt
 
 # Mode streaming (lebih "live"):
-python live_transcribe.py --mode stream \
+python apps/backend/src/live_transcribe.py --mode stream \
   --stream-bin /path/ke/whisper.cpp/examples/stream/stream \
   --model /path/ke/model.bin \
   --language id \

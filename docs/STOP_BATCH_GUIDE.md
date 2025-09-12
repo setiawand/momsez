@@ -50,7 +50,7 @@ lsof | grep -i audio
 ### Cek Device Audio (macOS)
 ```bash
 # List audio devices:
-python3 src/batch_transcribe.py --list-devices
+python3 apps/backend/src/batch_transcribe.py --list-devices
 
 # Atau gunakan system_profiler:
 system_profiler SPAudioDataType
@@ -91,7 +91,7 @@ sudo killall coreaudiod
 ```bash
 # Selalu cek status sebelum mulai recording baru:
 scripts/stop_batch.sh
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 ```
 
 ## 🔧 Advanced Solutions
@@ -99,13 +99,13 @@ python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 ### Script Auto-Stop dengan Timeout
 ```bash
 # Jalankan dengan timeout otomatis (5 menit):
-timeout 300 python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
+timeout 300 python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 ```
 
 ### Background Process Management
 ```bash
 # Jalankan di background dengan control:
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json &
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json &
 BATCH_PID=$!
 
 # Stop kapan saja:

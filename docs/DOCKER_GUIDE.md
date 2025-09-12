@@ -42,10 +42,15 @@ make dev
 
 ```
 mom-transcript/
-├── src/                    # Source code Python
-│   ├── batch_transcribe.py
-│   ├── hybrid_transcribe.py
-│   └── live_transcribe.py
+├── apps/
+│   ├── backend/
+│   │   └── src/           # FastAPI backend
+│   │       ├── api_server.py
+│   │       ├── batch_transcribe.py
+│   │       ├── hybrid_transcribe.py
+│   │       ├── live_transcribe.py
+│   │       └── main.py
+│   └── frontend/          # Next.js UI
 ├── configs/               # File konfigurasi
 │   ├── config.json
 │   ├── hybrid_config.json

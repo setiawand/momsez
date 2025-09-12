@@ -74,7 +74,7 @@ python3 tests/test_batch_stop.py
 ### Manual Testing
 ```bash
 # Test batch recording
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 
 # Langkah:
 # 1. Tekan ENTER untuk mulai
@@ -97,7 +97,7 @@ python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 
 ```bash
 # Method 1: Direct
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 
 # Method 2: Script
 scripts/start_batch.sh

@@ -43,13 +43,13 @@ pip install numpy sounddevice
 
 ```bash
 # Dengan konfigurasi default
-python3 hybrid_transcribe.py
+python3 apps/backend/src/hybrid_transcribe.py
 
 # Dengan konfigurasi custom
-python3 hybrid_transcribe.py --config my_config.json
+python3 apps/backend/src/hybrid_transcribe.py --config my_config.json
 
 # Dengan output directory custom
-python3 hybrid_transcribe.py --output-dir ./my_transcripts
+python3 apps/backend/src/hybrid_transcribe.py --output-dir ./my_transcripts
 ```
 
 ## Konfigurasi
@@ -142,7 +142,7 @@ watch -n 5 'cat output/hybrid/session_report.json | jq .'
 #### 1. Stream Mode Tidak Mendeteksi Suara
 ```bash
 # Cek audio devices
-python3 hybrid_transcribe.py --list-devices
+python3 apps/backend/src/hybrid_transcribe.py --list-devices
 
 # Test dengan VAD threshold lebih rendah
 # Edit config: "vad-thold": 0.4
@@ -243,10 +243,10 @@ def stop_transcription():
 ### 4. Environment Tuning
 ```bash
 # Set CPU affinity untuk better performance
-taskset -c 0,1 python3 hybrid_transcribe.py  # Linux
+taskset -c 0,1 python3 apps/backend/src/hybrid_transcribe.py  # Linux
 
 # Increase process priority
-nice -n -10 python3 hybrid_transcribe.py
+nice -n -10 python3 apps/backend/src/hybrid_transcribe.py
 
 # Set environment variables
 export OMP_NUM_THREADS=4

@@ -108,3 +108,21 @@ volumes:
   batch_data:
   hybrid_data:
   live_data:
+  momsez-frontend:
+    image: node:20
+    container_name: momsez-frontend
+    working_dir: /app
+    volumes:
+      - ./apps/frontend:/app
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://localhost:8030
+    command: ["/bin/bash", "-c", "npm ci || npm install && npm run dev"]
+    depends_on:
+      - mom-transcript
+    profiles:
+      - full
+      - front
+    networks:
+      - mom-transcript-net

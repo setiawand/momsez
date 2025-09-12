@@ -24,19 +24,19 @@ Script akan memandu Anda memilih konfigurasi dan memulai recording.
 
 ```bash
 # Dengan konfigurasi meeting
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json
 
 # Dengan konfigurasi default
-python3 src/batch_transcribe.py --config configs/hybrid_config.json
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config.json
 
 # Dengan output directory custom
-python3 src/batch_transcribe.py --config configs/hybrid_config_meeting.json --output-dir output/my_recordings
+python3 apps/backend/src/batch_transcribe.py --config configs/hybrid_config_meeting.json --output-dir output/my_recordings
 ```
 
 ### 3. Melihat Perangkat Audio
 
 ```bash
-python3 src/batch_transcribe.py --list-devices
+python3 apps/backend/src/batch_transcribe.py --list-devices
 ```
 
 ## Alur Kerja
@@ -108,10 +108,10 @@ Mode batch menggunakan konfigurasi yang sama dengan mode hybrid, tetapi hanya me
 ### Audio Device Issues
 ```bash
 # List available devices
-python3 src/batch_transcribe.py --list-devices
+python3 apps/backend/src/batch_transcribe.py --list-devices
 
 # Test with specific device
-python3 src/batch_transcribe.py --config configs/config.json --device 1
+python3 apps/backend/src/batch_transcribe.py --config configs/config.json --device 1
 ```
 
 ### Recording Stop Issues
@@ -149,7 +149,7 @@ pip install soundfile>=0.12.1
 ### Error: "Audio device not found"
 ```bash
 # Lihat perangkat yang tersedia
-python3 src/batch_transcribe.py --list-devices
+python3 apps/backend/src/batch_transcribe.py --list-devices
 
 # Update device_index di config file
 ```
