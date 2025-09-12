@@ -43,6 +43,13 @@ export default function IngestPage() {
         logLine('uploaded chunk #' + chunksRef.current)
       }
     }
+    mr.onstop = async () => {
+      // call finish only after recorder is fully stopped and last chunk delivered
+      const resp = await fetch(`${apiBase()}/sessions/${sessionId}/finish`, { method: 'POST', headers: authHeaders() })
+      if (!resp.ok) { logLine('finish failed: ' + (await resp.text())); return }
+      const data = await resp.json()
+      logLine('completed: ' + (data.transcript_path || ''))
+    }
     mr.start(3000) // 3s chunks
     mediaRecRef.current = mr
     setStatus('recording')
@@ -50,14 +57,14 @@ export default function IngestPage() {
   }
 
   const stopRecording = async () => {
-    mediaRecRef.current?.stop()
-    streamRef.current?.getTracks().forEach(t => t.stop())
+    // Flush any buffered data before stopping
+    try { mediaRecRef.current?.requestData() } catch {}
+    setTimeout(() => {
+      try { mediaRecRef.current?.stop() } catch {}
+      try { streamRef.current?.getTracks().forEach(t => t.stop()) } catch {}
+    }, 150)
     setStatus('stopped')
     logLine('stopped, finishing...')
-    const resp = await fetch(`${apiBase()}/sessions/${sessionId}/finish`, { method: 'POST', headers: authHeaders() })
-    if (!resp.ok) { logLine('finish failed: ' + (await resp.text())); return }
-    const data = await resp.json()
-    logLine('completed: ' + (data.transcript_path || ''))
   }
 
   useEffect(() => () => {

@@ -57,6 +57,7 @@ class SessionStatus(BaseModel):
     start_time: Optional[str] = None
     audio_path: Optional[str] = None
     transcript_path: Optional[str] = None
+    audio_duration: Optional[float] = None
     error_message: Optional[str] = None
 
 # Auth models
@@ -163,10 +164,14 @@ def _extract_bearer_token(authorization: Optional[str]) -> str:
 def get_current_user(authorization: Optional[str] = Header(None)) -> Dict:
     token = _extract_bearer_token(authorization)
     try:
-        payload = jwt.decode(token, _jwt_secret(), algorithms=['HS256'])
+        # allow small clock skew to avoid accidental expiry due to timing
+        leeway =  int(os.getenv('JWT_LEEWAY', '60'))
+        payload = jwt.decode(token, _jwt_secret(), algorithms=['HS256'], leeway=leeway)
         if not isinstance(payload, dict):
             raise HTTPException(status_code=401, detail='Invalid token payload')
         return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Expired token')
     except jwt.PyJWTError as e:
         raise HTTPException(status_code=401, detail=f'Invalid token: {e}')
 
@@ -504,6 +509,8 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                     'transcript_path': None,
                     'error': None,
                     'chunk_count': 0,
+                    'language': cfg.get('language', 'auto'),
+                    'audio_duration': None,
                 }
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
             else:
@@ -522,6 +529,8 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                     'audio_path': None,
                     'transcript_path': None,
                     'error': None,
+                    'language': cfg.get('language', 'auto'),
+                    'audio_duration': None,
                 }
                 active_device_sessions[dev_key] = session_id
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
@@ -583,6 +592,10 @@ async def sessions_stop(session_id: str, user: Dict = Depends(get_current_user))
             session['status'] = 'completed'
             session['audio_path'] = str(audio_path)
             session['transcript_path'] = str(transcript_path) if transcript_path else None
+            try:
+                session['audio_duration'] = _wav_duration(Path(audio_path))
+            except Exception:
+                session['audio_duration'] = None
             dev_key = _device_key(session.get('device_index'))
             active_device_sessions.pop(dev_key, None)
 
@@ -598,6 +611,7 @@ async def sessions_stop(session_id: str, user: Dict = Depends(get_current_user))
             'audio_path': str(audio_path),
             'transcript_path': str(transcript_path) if transcript_path else None,
             'text': text_content,
+            'audio_duration': session.get('audio_duration'),
         }
     except HTTPException:
         raise
@@ -625,6 +639,7 @@ async def sessions_status(session_id: str, user: Dict = Depends(get_current_user
             start_time=session.get('start_time'),
             audio_path=session.get('audio_path'),
             transcript_path=session.get('transcript_path'),
+            audio_duration=session.get('audio_duration'),
             error_message=session.get('error'),
         )
 
@@ -668,12 +683,23 @@ async def sessions_ingest(session_id: str, file: UploadFile = File(...), user: D
 
 def _convert_to_wav(src: Path, dst: Path, sample_rate: int = 16000) -> bool:
     """Try to convert arbitrary audio to mono 16k WAV via ffmpeg.
+    Uses explicit PCM S16LE to avoid codec issues with opus/webm.
     Returns True if success.
     """
     try:
-        cmd = ['ffmpeg', '-y', '-i', str(src), '-ar', str(sample_rate), '-ac', '1', str(dst)]
+        cmd = [
+            'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+            '-i', str(src),
+            '-map', 'a:0?',  # select first audio stream if present
+            '-vn',  # no video
+            '-acodec', 'pcm_s16le',
+            '-ar', str(sample_rate),
+            '-ac', '1',
+            '-f', 'wav',
+            str(dst),
+        ]
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        return p.returncode == 0 and dst.exists()
+        return p.returncode == 0 and dst.exists() and dst.stat().st_size > 0
     except Exception:
         return False
 
@@ -700,6 +726,15 @@ def _merge_wavs(wav_files: List[Path], output_path: Path) -> None:
                 frames = w.readframes(w.getnframes())
                 out_wav.writeframes(frames)
 
+def _wav_duration(path: Path) -> float:
+    try:
+        with wave.open(str(path), 'rb') as w:
+            frames = w.getnframes()
+            rate = w.getframerate()
+            return frames / float(rate) if rate else 0.0
+    except Exception:
+        return 0.0
+
 
 @app.post("/sessions/{session_id}/finish")
 async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user)):
@@ -718,31 +753,174 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
     if not chunks_dir.exists():
         raise HTTPException(status_code=400, detail="No chunks uploaded")
 
-    # Prepare list of wav files; convert if needed
-    wav_dir = out_dir / 'chunks_wav'
-    wav_dir.mkdir(exist_ok=True)
-    wav_files: List[Path] = []
+    # Build concat list for ffmpeg from original chunks (more robust than per-chunk decode/merge)
+    chunk_paths: List[Path] = []
     for p in sorted(chunks_dir.iterdir()):
         if p.is_file():
-            if p.suffix.lower() == '.wav':
-                wav_files.append(p)
-            else:
-                tmp_wav = wav_dir / (p.stem + '.wav')
-                ok = _convert_to_wav(p, tmp_wav)
-                if ok:
-                    wav_files.append(tmp_wav)
-                else:
-                    with sessions_lock:
-                        session['status'] = 'error'
-                        session['error'] = f'Failed to convert {p.name} to WAV'
-                    raise HTTPException(status_code=500, detail=f"Failed to convert {p.name} to WAV")
+            try:
+                if p.stat().st_size == 0:
+                    continue
+            except Exception:
+                pass
+            chunk_paths.append(p)
 
-    # Merge
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     merged_path = out_dir / 'recordings' / f'recording_{timestamp}.wav'
     merged_path.parent.mkdir(exist_ok=True)
+
+    if not chunk_paths:
+        with sessions_lock:
+            session['status'] = 'error'
+            session['error'] = 'No valid chunks to merge'
+        raise HTTPException(status_code=500, detail="Failed to merge chunks: No valid chunks to merge")
+
+    # Decide strategy: WebM chunks from MediaRecorder are often fragmented (no full EBML header)
+    # which ffmpeg concat demuxer cannot handle reliably. For all-webm chunks, skip concat
+    # and convert per-chunk to WAV directly.
+    webm_like = all(p.suffix.lower() in {'.webm', '.mkv'} for p in chunk_paths)
+
+    # Write concat list file and prepare log
+    concat_list = out_dir / 'chunks_list.txt'
+    logs_dir = out_dir / 'logs'
+    logs_dir.mkdir(exist_ok=True)
+    ingest_log = logs_dir / 'ingest.log'
     try:
-        _merge_wavs(wav_files, merged_path)
+        # If not all-webm, try concat demuxer first
+        concat_failed = True
+        if not webm_like:
+            with open(concat_list, 'w', encoding='utf-8') as f:
+                for pth in chunk_paths:
+                    f.write(f"file '{str(pth)}'\n")
+            cmd = [
+                'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                '-f', 'concat', '-safe', '0', '-i', str(concat_list),
+                '-map', 'a:0?', '-vn',
+                '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-f', 'wav',
+                str(merged_path),
+            ]
+            p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            try:
+                with open(ingest_log, 'a', encoding='utf-8') as lf:
+                    lf.write(f"=== CONCAT TRY @ {datetime.now().isoformat()} ===\n")
+                    lf.write("CMD: " + ' '.join(cmd) + "\n")
+                    lf.write(p.stdout or '')
+                    lf.write("\n")
+            except Exception:
+                pass
+            concat_failed = (p.returncode != 0 or not merged_path.exists() or merged_path.stat().st_size == 0)
+
+        if webm_like:
+            # Special handling for MediaRecorder WebM chunks: binary-concatenate clusters
+            # into a single WebM, then decode once to WAV. This avoids per-chunk EBML header issues.
+            joined_webm = out_dir / 'recordings' / f'joined_{timestamp}.webm'
+            try:
+                with open(joined_webm, 'wb') as outb:
+                    for src in chunk_paths:
+                        with open(src, 'rb') as inb:
+                            outb.write(inb.read())
+                # Now transcode the concatenated WebM to target WAV
+                cmd_join = [
+                    'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                    '-i', str(joined_webm),
+                    '-map', 'a:0?', '-vn',
+                    '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-f', 'wav',
+                    str(merged_path),
+                ]
+                pj = subprocess.run(cmd_join, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                try:
+                    with open(ingest_log, 'a', encoding='utf-8') as lf:
+                        lf.write(f"=== WEBM BINARY CONCAT @ {datetime.now().isoformat()} ===\n")
+                        lf.write("CMD: " + ' '.join(cmd_join) + "\n")
+                        lf.write(pj.stdout or '')
+                        lf.write("\n")
+                except Exception:
+                    pass
+                if pj.returncode == 0 and merged_path.exists() and merged_path.stat().st_size > 0:
+                    # success path; optionally keep joined_webm for debugging
+                    pass
+                else:
+                    # If binary concat+decode failed, fallback to per-chunk conversion
+                    raise RuntimeError('webm binary concat transcode failed')
+            except Exception:
+                # Fallback: convert per-chunk then merge with wave module
+                wav_dir = out_dir / 'chunks_wav'
+                wav_dir.mkdir(exist_ok=True)
+                wav_files: List[Path] = []
+                for src in chunk_paths:
+                    tmp_wav = wav_dir / (src.stem + '.wav')
+                    # Run conversion and capture detailed logs for troubleshooting
+                    try:
+                        cmd = [
+                            'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                            '-i', str(src),
+                            '-map', 'a:0?',
+                            '-vn',
+                            '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-f', 'wav',
+                            str(tmp_wav),
+                        ]
+                        p2 = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                        ok = p2.returncode == 0 and tmp_wav.exists() and tmp_wav.stat().st_size > 0
+                        with open(ingest_log, 'a', encoding='utf-8') as lf:
+                            lf.write(f"convert {src.name} -> {tmp_wav.name}: {'OK' if ok else 'FAIL'}\n")
+                            if not ok:
+                                lf.write('  CMD: ' + ' '.join(cmd) + "\n")
+                                lf.write((p2.stdout or '') + "\n")
+                    except Exception as e:
+                        ok = False
+                        try:
+                            with open(ingest_log, 'a', encoding='utf-8') as lf:
+                                lf.write(f"convert {src.name} -> {tmp_wav.name}: EXCEPTION {e}\n")
+                        except Exception:
+                            pass
+                    if ok:
+                        wav_files.append(tmp_wav)
+                if not wav_files:
+                    with sessions_lock:
+                        session['status'] = 'error'
+                        session['error'] = 'No chunks convertible to WAV'
+                    raise HTTPException(status_code=500, detail="Failed to merge chunks: No chunks convertible to WAV")
+                _merge_wavs(wav_files, merged_path)
+        elif concat_failed:
+            # Fallback: convert per-chunk then merge with wave module
+            wav_dir = out_dir / 'chunks_wav'
+            wav_dir.mkdir(exist_ok=True)
+            wav_files: List[Path] = []
+            for src in chunk_paths:
+                tmp_wav = wav_dir / (src.stem + '.wav')
+                # Run conversion and capture detailed logs for troubleshooting
+                try:
+                    cmd = [
+                        'ffmpeg', '-y', '-hide_banner', '-loglevel', 'error',
+                        '-i', str(src),
+                        '-map', 'a:0?',
+                        '-vn',
+                        '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1', '-f', 'wav',
+                        str(tmp_wav),
+                    ]
+                    p2 = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    ok = p2.returncode == 0 and tmp_wav.exists() and tmp_wav.stat().st_size > 0
+                    with open(ingest_log, 'a', encoding='utf-8') as lf:
+                        lf.write(f"convert {src.name} -> {tmp_wav.name}: {'OK' if ok else 'FAIL'}\n")
+                        if not ok:
+                            lf.write('  CMD: ' + ' '.join(cmd) + "\n")
+                            lf.write((p2.stdout or '') + "\n")
+                except Exception as e:
+                    ok = False
+                    try:
+                        with open(ingest_log, 'a', encoding='utf-8') as lf:
+                            lf.write(f"convert {src.name} -> {tmp_wav.name}: EXCEPTION {e}\n")
+                    except Exception:
+                        pass
+                if ok:
+                    wav_files.append(tmp_wav)
+            if not wav_files:
+                with sessions_lock:
+                    session['status'] = 'error'
+                    session['error'] = 'No chunks convertible to WAV'
+                raise HTTPException(status_code=500, detail="Failed to merge chunks: No chunks convertible to WAV")
+            _merge_wavs(wav_files, merged_path)
+    except HTTPException:
+        raise
     except Exception as e:
         with sessions_lock:
             session['status'] = 'error'
@@ -754,7 +932,7 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         'output_dir': str(out_dir),
         'whisper_bin': './whisper.cpp/main',
         'chunk_model': './whisper.cpp/models/ggml-small.bin',
-        'language': 'id',
+        'language': session.get('language') or 'auto',
     }
     transcriber = BatchTranscriber(cfg, interactive=False)
     transcript_path = transcriber.transcribe_audio(merged_path)
@@ -770,6 +948,10 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         session['status'] = 'completed'
         session['audio_path'] = str(merged_path)
         session['transcript_path'] = str(transcript_path) if transcript_path else None
+        try:
+            session['audio_duration'] = _wav_duration(merged_path)
+        except Exception:
+            session['audio_duration'] = None
 
     try:
         await session_ws.broadcast(session_id, json.dumps({'type': 'completed', 'session_id': session_id, 'audio_path': str(merged_path), 'transcript_path': session['transcript_path']}))
@@ -782,6 +964,7 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         'audio_path': str(merged_path),
         'transcript_path': str(transcript_path) if transcript_path else None,
         'text': text,
+        'audio_duration': session.get('audio_duration'),
     }
 
 @app.get("/sessions", response_model=List[SessionStatus])

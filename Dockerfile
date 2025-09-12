@@ -19,7 +19,8 @@ WORKDIR /app
 # Copy and build whisper.cpp
 COPY whisper.cpp/ ./whisper.cpp/
 WORKDIR /app/whisper.cpp
-RUN make
+# Force clean rebuild to avoid copying host binaries with wrong architecture
+RUN make clean || true && make -B
 
 # Back to app directory
 WORKDIR /app

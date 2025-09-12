@@ -39,6 +39,9 @@ export default function SessionDetail() {
     <main className="space-y-4">
       <h1 className="text-2xl font-semibold">Session {id}</h1>
       <div className="text-sm text-muted-foreground">Status: {data?.status}</div>
+      {typeof data?.audio_duration === 'number' && (
+        <div className="text-sm text-muted-foreground">Audio duration: {data.audio_duration.toFixed(1)}s</div>
+      )}
       <div className="flex gap-2">
         <Button onClick={stop}>Stop</Button>
         <Button variant="ghost" onClick={cancel}>Cancel</Button>
