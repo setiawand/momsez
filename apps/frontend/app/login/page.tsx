@@ -16,7 +16,8 @@ export default function LoginPage() {
       const res = await fetch(`${apiBase()}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: userId }),
+        // Request longer token lifetime for long meetings (8 hours)
+        body: JSON.stringify({ user_id: userId, exp_minutes: 480 }),
       })
       if (!res.ok) throw new Error(await res.text())
       const data = await res.json()

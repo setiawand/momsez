@@ -75,12 +75,13 @@ export default function IngestPage() {
   return (
     <main className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Browser Ingest Demo</h1>
+        <h1 className="text-2xl font-semibold">Browser Ingest</h1>
+        <div className="text-sm text-muted-foreground">Record in browser and auto-upload</div>
       </div>
 
       <Card>
         <CardContent className="space-y-3">
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button onClick={startSession} disabled={!!sessionId}>Start Ingest Session</Button>
             <Button variant="secondary" onClick={startRecording} disabled={!sessionId || status === 'recording'}>Start Recording</Button>
             <Button variant="ghost" onClick={stopRecording} disabled={status !== 'recording'}>Stop + Finish</Button>
@@ -90,9 +91,9 @@ export default function IngestPage() {
       </Card>
 
       <Card>
-        <CardHeader><h3 className="font-medium">Log</h3></CardHeader>
+        <CardHeader><h3 className="font-medium">Activity</h3></CardHeader>
         <CardContent>
-          <pre className="bg-muted rounded-md p-3 max-h-60 overflow-auto whitespace-pre-wrap text-sm">{log.join('\n')}</pre>
+          <pre className="bg-muted rounded-md p-3 max-h-72 overflow-auto whitespace-pre-wrap text-sm">{log.join('\n')}</pre>
         </CardContent>
       </Card>
     </main>

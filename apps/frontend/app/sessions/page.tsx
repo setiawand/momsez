@@ -8,7 +8,7 @@ import { apiBase, authHeaders } from '../../lib/api'
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
 
 export default function SessionsPage() {
-  const { data, error, isLoading, mutate } = useSWR(`${apiBase()}/sessions`, fetcher)
+  const { data, error, isLoading, mutate } = useSWR(`${apiBase()}/sessions`, fetcher, { refreshInterval: 4000 })
 
   return (
     <main className="space-y-4">
@@ -21,12 +21,18 @@ export default function SessionsPage() {
       <div className="grid gap-3">
         {(data || []).map((s: any) => (
           <Card key={s.session_id}>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div className="font-mono text-sm">{s.session_id}</div>
-                <Link href={`/sessions/${s.session_id}`}><Button variant="secondary">Open</Button></Link>
+            <CardContent className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <div className="font-mono text-sm truncate">{s.session_id}</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{s.status}</span>
+                  <Link href={`/sessions/${s.session_id}`}><Button size="sm" variant="secondary">Open</Button></Link>
+                </div>
               </div>
-              <div className="text-sm text-muted-foreground mt-2">Status: {s.status} • Start: {s.start_time}</div>
+              <div className="text-sm text-muted-foreground">Start: {s.start_time || '-'}</div>
+              {s.transcript_path && (
+                <div className="text-xs"><a className="underline" href={`${apiBase().replace(/\/$/, '')}/${s.transcript_path}`} target="_blank">Transcript</a></div>
+              )}
             </CardContent>
           </Card>
         ))}
