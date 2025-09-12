@@ -2,6 +2,8 @@
 import useSWR from 'swr'
 import { useEffect, useState } from 'react'
 import { apiBase, authHeaders, wsUrl } from '../../../lib/api'
+import { Button } from '../../../components/ui/button'
+import { Card, CardContent } from '../../../components/ui/card'
 import { useParams } from 'next/navigation'
 
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
@@ -34,21 +36,22 @@ export default function SessionDetail() {
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Session {id}</h1>
-      <div>Status: {data?.status}</div>
-      <div style={{ display: 'flex', gap: 8, margin: '12px 0' }}>
-        <button onClick={stop}>Stop</button>
-        <button onClick={cancel}>Cancel</button>
+    <main className="space-y-4">
+      <h1 className="text-2xl font-semibold">Session {id}</h1>
+      <div className="text-sm text-muted-foreground">Status: {data?.status}</div>
+      <div className="flex gap-2">
+        <Button onClick={stop}>Stop</Button>
+        <Button variant="ghost" onClick={cancel}>Cancel</Button>
+        {data?.transcript_path && (
+          <a className="btn btn-secondary" href={`${apiBase().replace(/\/$/, '')}/${data.transcript_path}`} target="_blank">Download transcript</a>
+        )}
       </div>
-      {data?.transcript_path && (
-        <div>
-          <a href={`${apiBase().replace(/\/$/, '')}/${data.transcript_path}`} target="_blank">Download transcript</a>
-        </div>
-      )}
-      <h3>Events</h3>
-      <pre style={{ background: '#fafafa', padding: 12, maxHeight: 240, overflow: 'auto' }}>{events.join('\n')}</pre>
+      <Card>
+        <CardContent>
+          <h3 className="font-medium mb-2">Events</h3>
+          <pre className="bg-muted rounded-md p-3 max-h-60 overflow-auto whitespace-pre-wrap text-sm">{events.join('\n')}</pre>
+        </CardContent>
+      </Card>
     </main>
   )
 }
-

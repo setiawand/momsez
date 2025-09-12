@@ -1,6 +1,9 @@
 "use client"
 import { useState } from 'react'
 import { apiBase } from '../../lib/api'
+import { Button } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Card, CardContent } from '../../components/ui/card'
 
 export default function LoginPage() {
   const [userId, setUserId] = useState('alice')
@@ -25,20 +28,21 @@ export default function LoginPage() {
   }
 
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Login (dev)</h1>
-      <div style={{ display: 'grid', gap: 8, maxWidth: 420 }}>
-        <input value={userId} onChange={e => setUserId(e.target.value)} placeholder="user_id or username" />
-        <button onClick={login}>Login</button>
-        {error && <div style={{ color: 'crimson' }}>{error}</div>}
-        {token && (
-          <div>
-            <div>Token saved to localStorage (MOMSEZ_JWT)</div>
-            <code style={{ display: 'block', whiteSpace: 'pre-wrap' }}>{token}</code>
-          </div>
-        )}
-      </div>
+    <main className="space-y-4 max-w-md">
+      <h1 className="text-2xl font-semibold">Login (dev)</h1>
+      <Card>
+        <CardContent className="space-y-3">
+          <Input value={userId} onChange={e => setUserId(e.target.value)} placeholder="user_id or username" />
+          <Button onClick={login}>Login</Button>
+          {error && <div className="text-red-600 text-sm">{error}</div>}
+          {token && (
+            <div className="text-sm">
+              <div>Token saved to localStorage (MOMSEZ_JWT)</div>
+              <code className="block whitespace-pre-wrap">{token}</code>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </main>
   )
 }
-

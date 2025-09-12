@@ -1,6 +1,8 @@
 "use client"
 import useSWR from 'swr'
 import Link from 'next/link'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent } from '../../components/ui/card'
 import { apiBase, authHeaders } from '../../lib/api'
 
 const fetcher = (url: string) => fetch(url, { headers: authHeaders() }).then(r => r.json())
@@ -9,24 +11,26 @@ export default function SessionsPage() {
   const { data, error, isLoading, mutate } = useSWR(`${apiBase()}/sessions`, fetcher)
 
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>My Sessions</h1>
-      <div style={{ margin: '12px 0' }}>
-        <Link href="/sessions/start">Start a session</Link>
+    <main className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">My Sessions</h1>
+        <Link href="/sessions/start"><Button>Start a session</Button></Link>
       </div>
       {isLoading && <div>Loading...</div>}
-      {error && <div style={{ color: 'crimson' }}>Error loading sessions</div>}
-      <ul style={{ display: 'grid', gap: 8 }}>
+      {error && <div className="text-red-600">Error loading sessions</div>}
+      <div className="grid gap-3">
         {(data || []).map((s: any) => (
-          <li key={s.session_id} style={{ border: '1px solid #ddd', padding: 12 }}>
-            <div><b>{s.session_id}</b></div>
-            <div>Status: {s.status}</div>
-            <div>Start: {s.start_time}</div>
-            <div><Link href={`/sessions/${s.session_id}`}>Open</Link></div>
-          </li>
+          <Card key={s.session_id}>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div className="font-mono text-sm">{s.session_id}</div>
+                <Link href={`/sessions/${s.session_id}`}><Button variant="secondary">Open</Button></Link>
+              </div>
+              <div className="text-sm text-muted-foreground mt-2">Status: {s.status} • Start: {s.start_time}</div>
+            </CardContent>
+          </Card>
         ))}
-      </ul>
+      </div>
     </main>
   )
 }
-

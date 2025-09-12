@@ -1,6 +1,8 @@
 "use client"
 import { useEffect, useRef, useState } from 'react'
 import { apiBase, authHeaders } from '../../lib/api'
+import { Button } from '../../components/ui/button'
+import { Card, CardContent, CardHeader } from '../../components/ui/card'
 
 export default function IngestPage() {
   const [sessionId, setSessionId] = useState<string>('')
@@ -64,17 +66,28 @@ export default function IngestPage() {
   }, [])
 
   return (
-    <main style={{ padding: 24, fontFamily: 'sans-serif' }}>
-      <h1>Browser Ingest Demo</h1>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        <button onClick={startSession} disabled={!!sessionId}>Start Ingest Session</button>
-        <button onClick={startRecording} disabled={!sessionId || status === 'recording'}>Start Recording</button>
-        <button onClick={stopRecording} disabled={status !== 'recording'}>Stop + Finish</button>
+    <main className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Browser Ingest Demo</h1>
       </div>
-      <div>Session: {sessionId || '-'}</div>
-      <h3>Log</h3>
-      <pre style={{ background: '#fafafa', padding: 12, maxHeight: 240, overflow: 'auto' }}>{log.join('\n')}</pre>
+
+      <Card>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <Button onClick={startSession} disabled={!!sessionId}>Start Ingest Session</Button>
+            <Button variant="secondary" onClick={startRecording} disabled={!sessionId || status === 'recording'}>Start Recording</Button>
+            <Button variant="ghost" onClick={stopRecording} disabled={status !== 'recording'}>Stop + Finish</Button>
+          </div>
+          <div className="text-sm text-muted-foreground">Session: <span className="font-mono">{sessionId || '-'}</span></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><h3 className="font-medium">Log</h3></CardHeader>
+        <CardContent>
+          <pre className="bg-muted rounded-md p-3 max-h-60 overflow-auto whitespace-pre-wrap text-sm">{log.join('\n')}</pre>
+        </CardContent>
+      </Card>
     </main>
   )
 }
-
