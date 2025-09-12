@@ -110,7 +110,18 @@ app.add_middleware(
 )
 
 # Allowed directories for file access (unified under output/)
-PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+# Resolve project root robustly for both legacy layout (repo/src) and monorepo (apps/backend/src)
+_this = Path(__file__).resolve()
+_default_root = _this.parent.parent  # legacy: repo/src -> repo
+try:
+    # monorepo: apps/backend/src -> repo at parents[3]
+    if _this.parents[2].name == 'apps':
+        _project_root = _this.parents[3]
+    else:
+        _project_root = _default_root
+except Exception:
+    _project_root = _default_root
+PROJECT_ROOT = _project_root.resolve()
 ALLOWED_DIRS = [
     PROJECT_ROOT / 'output',
     PROJECT_ROOT / 'uploads',
