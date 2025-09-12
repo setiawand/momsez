@@ -15,6 +15,16 @@ make run-batch
 make run-hybrid
 ```
 
+### Full Stack (Backend + Frontend)
+
+```
+# Jalankan backend (API :8030) dan frontend (Next.js :3000)
+make run-web
+
+# Stop stack
+make stop-web
+```
+
 📖 **[Panduan Docker Lengkap](DOCKER_GUIDE.md)**
 
 ## 📁 Struktur Project
@@ -204,6 +214,44 @@ ws://localhost:8000/ws/session?session_id=$SID&token=$JWT
 ```
 
 Events are JSON messages with fields like `type`, `session_id`, and additional data.
+
+## Frontend (Next.js + shadcn/ui)
+
+Location: `apps/frontend`
+
+Setup:
+
+```
+cd apps/frontend
+npm install
+npm run dev
+```
+
+Environment:
+
+```
+# .env.local
+NEXT_PUBLIC_API_BASE=http://localhost:8000
+```
+
+Optional (shadcn/ui):
+
+```
+npx shadcn-ui@latest init
+# Add components as needed, e.g.
+npx shadcn-ui@latest add button input dialog toast card
+```
+
+### MediaRecorder Ingest (Browser)
+
+Frontend dapat merekam audio di browser dan mengunggah chunk ke backend:
+
+1. Login untuk mendapatkan JWT.
+2. Start ingest session: `POST /sessions/start {"ingest":true}`.
+3. Gunakan MediaRecorder (webm/opus) dengan `timeslice` untuk mengirim potongan ke `POST /sessions/{id}/ingest`.
+4. Akhiri dengan `POST /sessions/{id}/finish` untuk merge + transkripsi.
+
+Contoh halaman tersedia di `apps/frontend/app/ingest/page.tsx`.
 
 ## Bahasa Indonesia
 

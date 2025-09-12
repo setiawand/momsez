@@ -34,6 +34,8 @@ help:
 	@echo "  make health         - Check container health"
 	@echo "  make front-dev      - Start Next.js dev server (apps/frontend)"
 	@echo "  make back-dev       - Start FastAPI locally"
+	@echo "  make run-web        - Run backend+frontend via Docker Compose (full profile)"
+	@echo "  make stop-web       - Stop web stack (Compose)"
  	@echo "  make test           - Run test scripts"
 
 # Build commands
@@ -126,6 +128,14 @@ front-dev:
 back-dev:
 	@echo "Starting FastAPI locally on :8000 (monorepo entrypoint)"
 	@python3 apps/backend/src/main.py
+
+run-web:
+	@echo "Starting backend (API :8030) and frontend (Next :3000) via Docker Compose..."
+	docker compose --profile full up
+
+stop-web:
+	@echo "Stopping web stack (backend + frontend)"
+	docker compose --profile full down
 
 # Tests (simple scripts; require local environment prerequisites)
 test:
