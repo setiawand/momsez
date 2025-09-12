@@ -91,7 +91,7 @@ services:
       - .:/app
     environment:
       - DEVELOPMENT=true
-    command: ["/bin/bash", "-c", "pip install -r requirements.txt && cd /app && (python src/api_server.py &)"]
+    command: ["/bin/bash", "-c", "pip install -r requirements.txt && cd /app && (python apps/backend/src/main.py &)"]
     stdin_open: true
     tty: true
     profiles:

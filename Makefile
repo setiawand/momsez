@@ -124,8 +124,8 @@ front-dev:
 	@cd apps/frontend && npm run dev
 
 back-dev:
-	@echo "Starting FastAPI locally on :8000"
-	@python3 src/api_server.py
+	@echo "Starting FastAPI locally on :8000 (monorepo entrypoint)"
+	@python3 apps/backend/src/main.py
 
 # Tests (simple scripts; require local environment prerequisites)
 test:
