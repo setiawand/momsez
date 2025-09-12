@@ -37,7 +37,7 @@ services:
       - /dev/snd:/dev/snd
     environment:
       - TRANSCRIPTION_MODE=batch
-    command: ["python", "src/batch_transcribe.py"]
+    command: ["python", "apps/backend/src/batch_transcribe.py"]
     profiles:
       - batch
     networks:
@@ -56,7 +56,7 @@ services:
       - /dev/snd:/dev/snd
     environment:
       - TRANSCRIPTION_MODE=hybrid
-    command: ["python", "src/hybrid_transcribe.py"]
+    command: ["python", "apps/backend/src/hybrid_transcribe.py"]
     profiles:
       - hybrid
     networks:
@@ -74,7 +74,7 @@ services:
       - /dev/snd:/dev/snd
     environment:
       - TRANSCRIPTION_MODE=live
-    command: ["python", "src/live_transcribe.py"]
+    command: ["python", "apps/backend/src/live_transcribe.py"]
     profiles:
       - live
     networks:
@@ -99,15 +99,6 @@ services:
     networks:
       - mom-transcript-net
 
-networks:
-  mom-transcript-net:
-    driver: bridge
-
-volumes:
-  output_data:
-  batch_data:
-  hybrid_data:
-  live_data:
   momsez-frontend:
     image: node:20
     container_name: momsez-frontend
@@ -115,7 +106,7 @@ volumes:
     volumes:
       - ./apps/frontend:/app
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - NEXT_PUBLIC_API_BASE=http://localhost:8030
     command: ["/bin/bash", "-c", "npm ci || npm install && npm run dev"]
@@ -126,3 +117,13 @@ volumes:
       - front
     networks:
       - mom-transcript-net
+
+networks:
+  mom-transcript-net:
+    driver: bridge
+
+volumes:
+  output_data:
+  batch_data:
+  hybrid_data:
+  live_data:

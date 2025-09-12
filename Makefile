@@ -36,7 +36,7 @@ help:
 	@echo "  make back-dev       - Start FastAPI locally"
 	@echo "  make run-web        - Run backend+frontend via Docker Compose (full profile)"
 	@echo "  make stop-web       - Stop web stack (Compose)"
- 	@echo "  make test           - Run test scripts"
+	@echo "  make test           - Run test scripts"
 
 # Build commands
 build:

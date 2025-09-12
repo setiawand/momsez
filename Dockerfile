@@ -28,8 +28,7 @@ WORKDIR /app
 COPY requirements.txt* ./
 RUN pip install --no-cache-dir -r requirements.txt || pip install fastapi uvicorn websockets python-multipart aiofiles
 
-# Copy Python source code
-COPY src/ ./src/
+# Copy Python source code (monorepo backend)
 COPY apps/backend/src/ ./apps/backend/src/
 COPY configs/ ./configs/
 COPY scripts/ ./scripts/
