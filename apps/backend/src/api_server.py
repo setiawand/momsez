@@ -98,7 +98,9 @@ transcription_state = {
 
 # Sessionized state structures
 sessions: Dict[str, Dict] = {}
-sessions_lock = threading.Lock()
+# Use re-entrant lock because some helpers (e.g., _write_session_meta) may be
+# invoked while holding the same lock. A non-reentrant Lock would deadlock.
+sessions_lock = threading.RLock()
 active_device_sessions: Dict[str, str] = {}
 
 # CORS middleware
@@ -147,6 +149,93 @@ def _safe_resolve(path_str: str) -> Path:
 def _device_key(device_index: Optional[int]) -> str:
     """Return key used to gate concurrent capture on the same device."""
     return 'default' if device_index is None else str(device_index)
+
+# ---- Session persistence (meta.json per session) ----
+def _session_meta_path(out_dir: Path) -> Path:
+    return Path(out_dir) / 'meta.json'
+
+def _to_rel(p: Optional[str | Path]) -> Optional[str]:
+    if not p:
+        return None
+    try:
+        pp = Path(p)
+        return str(pp.resolve().relative_to(PROJECT_ROOT))
+    except Exception:
+        return str(p).lstrip('/')
+
+def _write_session_meta(session_id: str):
+    with sessions_lock:
+        s = sessions.get(session_id)
+        if not s:
+            return
+        out_dir = Path(s.get('output_dir') or (PROJECT_ROOT / 'output' / 'sessions' / session_id))
+        meta = {
+            'session_id': session_id,
+            'user_id': s.get('user_id'),
+            'status': s.get('status'),
+            'output_dir': _to_rel(out_dir),
+            'start_time': s.get('start_time'),
+            'audio_path': _to_rel(s.get('audio_path')),
+            'transcript_path': _to_rel(s.get('transcript_path')),
+            'audio_duration': s.get('audio_duration'),
+            'language': s.get('language') or 'auto',
+            'chunk_count': int(s.get('chunk_count') or 0),
+        }
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        with open(_session_meta_path(out_dir), 'w', encoding='utf-8') as f:
+            json.dump(meta, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+
+def _load_session_meta(session_id: str, out_dir: Path) -> Optional[Dict]:
+    meta_path = _session_meta_path(out_dir)
+    if not meta_path.exists():
+        return None
+    try:
+        with open(meta_path, 'r', encoding='utf-8') as f:
+            m = json.load(f)
+        # Normalize to absolute paths at runtime
+        if m.get('output_dir') and not str(m['output_dir']).startswith(str(PROJECT_ROOT)):
+            m['output_dir'] = str((PROJECT_ROOT / m['output_dir']).resolve())
+        for key in ['audio_path', 'transcript_path']:
+            if m.get(key) and not str(m[key]).startswith(str(PROJECT_ROOT)):
+                m[key] = str((PROJECT_ROOT / m[key]).resolve())
+        return m
+    except Exception:
+        return None
+
+@app.on_event("startup")
+async def restore_sessions_from_disk():
+    base = PROJECT_ROOT / 'output' / 'sessions'
+    try:
+        if not base.exists():
+            return
+        for d in base.iterdir():
+            if not d.is_dir():
+                continue
+            sid = d.name
+            m = _load_session_meta(sid, d)
+            if not m:
+                continue
+            with sessions_lock:
+                sessions[sid] = {
+                    'status': m.get('status') or 'completed',
+                    'transcriber': None,
+                    'device_index': None,
+                    'output_dir': m.get('output_dir') or str(d),
+                    'start_time': m.get('start_time'),
+                    'audio_path': m.get('audio_path'),
+                    'transcript_path': m.get('transcript_path'),
+                    'error': None,
+                    'chunk_count': m.get('chunk_count') or 0,
+                    'language': m.get('language') or 'auto',
+                    'audio_duration': m.get('audio_duration'),
+                    'user_id': m.get('user_id') or '',
+                }
+    except Exception:
+        # Non-fatal restore failure
+        pass
 
 # --- Minimal JWT Auth (Bearer) for session endpoints ---
 def _jwt_secret() -> str:
@@ -513,6 +602,10 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                     'audio_duration': None,
                 }
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
+                try:
+                    _write_session_meta(session_id)
+                except Exception:
+                    pass
             else:
                 if dev_key in active_device_sessions:
                     raise HTTPException(status_code=409, detail=f"Device in use by session {active_device_sessions[dev_key]}")
@@ -534,6 +627,10 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                 }
                 active_device_sessions[dev_key] = session_id
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
+                try:
+                    _write_session_meta(session_id)
+                except Exception:
+                    pass
 
         # Notify session channel
         try:
@@ -598,6 +695,10 @@ async def sessions_stop(session_id: str, user: Dict = Depends(get_current_user))
                 session['audio_duration'] = None
             dev_key = _device_key(session.get('device_index'))
             active_device_sessions.pop(dev_key, None)
+            try:
+                _write_session_meta(session_id)
+            except Exception:
+                pass
 
         # Notify session channel
         try:
@@ -621,6 +722,10 @@ async def sessions_stop(session_id: str, user: Dict = Depends(get_current_user))
             session['error'] = str(e)
             dev_key = _device_key(session.get('device_index'))
             active_device_sessions.pop(dev_key, None)
+            try:
+                _write_session_meta(session_id)
+            except Exception:
+                pass
         raise HTTPException(status_code=500, detail=f"Failed to stop session: {str(e)}")
 
 
@@ -669,6 +774,11 @@ async def sessions_ingest(session_id: str, file: UploadFile = File(...), user: D
         content = await file.read()
         with open(chunk_path, 'wb') as f:
             f.write(content)
+        # persist meta after chunk update
+        try:
+            _write_session_meta(session_id)
+        except Exception:
+            pass
 
         # Notify via WS
         try:
@@ -957,6 +1067,10 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         await session_ws.broadcast(session_id, json.dumps({'type': 'completed', 'session_id': session_id, 'audio_path': str(merged_path), 'transcript_path': session['transcript_path']}))
     except Exception:
         pass
+    try:
+        _write_session_meta(session_id)
+    except Exception:
+        pass
 
     return {
         'session_id': session_id,
@@ -1013,6 +1127,10 @@ async def sessions_cancel(session_id: str, user: Dict = Depends(get_current_user
             dev_key = _device_key(session.get('device_index'))
             active_device_sessions.pop(dev_key, None)
             audio_path = session.get('audio_path')
+            try:
+                _write_session_meta(session_id)
+            except Exception:
+                pass
         try:
             await session_ws.broadcast(session_id, json.dumps({'type': 'cancelled', 'session_id': session_id, 'audio_path': audio_path}))
         except Exception:
@@ -1024,6 +1142,10 @@ async def sessions_cancel(session_id: str, user: Dict = Depends(get_current_user
             session['error'] = str(e)
             dev_key = _device_key(session.get('device_index'))
             active_device_sessions.pop(dev_key, None)
+            try:
+                _write_session_meta(session_id)
+            except Exception:
+                pass
         raise HTTPException(status_code=500, detail=f"Failed to cancel session: {str(e)}")
 
 @app.delete("/sessions/{session_id}")
