@@ -26,6 +26,7 @@ export default function IngestPage() {
   const [procPercent, setProcPercent] = useState<number>(0)
   const procTimerRef = useRef<any>(null)
   const audioEstSecRef = useRef<number>(0)
+  const estTotalRef = useRef<number>(10)
 
   const logLine = (s: string) => setLog(prev => [s, ...prev].slice(0, 100))
 
@@ -93,13 +94,14 @@ export default function IngestPage() {
       setStatus('processing')
       // Start simple progress based on estimated audio length (chunks * 3s)
       audioEstSecRef.current = Math.max(1, chunksRef.current * 3)
-      const est = Math.max(5, Math.round(audioEstSecRef.current * 1.0))
+      // Initial estimate: audio length (seconds) scaled by 1.0x
+      estTotalRef.current = Math.max(5, Math.round(audioEstSecRef.current * 1.0))
       const startTs = Date.now()
       if (procTimerRef.current) clearInterval(procTimerRef.current)
       procTimerRef.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startTs) / 1000)
         setProcElapsed(elapsed)
-        const pct = Math.min(95, Math.round((elapsed / est) * 100))
+        const pct = Math.min(95, Math.round((elapsed / estTotalRef.current) * 100))
         setProcPercent(pct)
       }, 500)
 
@@ -111,6 +113,11 @@ export default function IngestPage() {
         ws.onmessage = (ev) => {
           try {
             const msg = JSON.parse(ev.data)
+            if (msg?.type === 'processing' && msg?.session_id === sid && typeof msg?.audio_duration === 'number') {
+              // Update estimate with actual audio duration from backend
+              audioEstSecRef.current = Math.max(1, Math.round(msg.audio_duration))
+              estTotalRef.current = Math.max(5, Math.round(audioEstSecRef.current * 1.0))
+            }
             if (msg?.type === 'completed' && msg?.session_id === sid && !redirectedRef.current) {
               setToast('Selesai — transcript siap diunduh')
               setTimeout(() => setToast(''), 2000)

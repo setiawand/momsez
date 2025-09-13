@@ -1044,6 +1044,14 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         'chunk_model': './whisper.cpp/models/ggml-small.bin',
         'language': session.get('language') or 'auto',
     }
+    # Broadcast processing with actual audio duration before transcription
+    try:
+        dur = _wav_duration(merged_path)
+        with sessions_lock:
+            session['audio_duration'] = dur
+        await session_ws.broadcast(session_id, json.dumps({'type': 'processing', 'session_id': session_id, 'audio_duration': dur}))
+    except Exception:
+        pass
     transcriber = BatchTranscriber(cfg, interactive=False)
     transcript_path = transcriber.transcribe_audio(merged_path)
     text = ''
