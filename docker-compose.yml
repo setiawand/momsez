@@ -1,8 +1,8 @@
 services:
   # Main application service
-  mom-transcript:
+  momsez-backend:
     build: .
-    container_name: mom-transcript-app
+    container_name: momsez-backend
     ports:
       - "8030:8000"  # Backend API
     volumes:
@@ -21,6 +21,25 @@ services:
     privileged: true
     profiles:
       - full
+    networks:
+      - mom-transcript-net
+
+  momsez-frontend:
+    image: node:20
+    container_name: momsez-frontend
+    working_dir: /app
+    volumes:
+      - ./apps/frontend:/app
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://localhost:8030
+    command: ["/bin/bash", "-c", "npm install && npm run dev"]
+    depends_on:
+      - momsez-backend
+    profiles:
+      - full
+      - front
     networks:
       - mom-transcript-net
 
@@ -96,25 +115,6 @@ services:
     tty: true
     profiles:
       - dev
-    networks:
-      - mom-transcript-net
-
-  momsez-frontend:
-    image: node:20
-    container_name: momsez-frontend
-    working_dir: /app
-    volumes:
-      - ./apps/frontend:/app
-    ports:
-      - "3001:3000"
-    environment:
-      - NEXT_PUBLIC_API_BASE=http://localhost:8030
-    command: ["/bin/bash", "-c", "npm install && npm run dev"]
-    depends_on:
-      - mom-transcript
-    profiles:
-      - full
-      - front
     networks:
       - mom-transcript-net
 
