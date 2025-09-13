@@ -83,6 +83,7 @@ export default function IngestPage() {
     mr.onstop = async () => {
       // call finish only after recorder is fully stopped and last chunk delivered
       const sid = sessionIdRef.current
+      setStatus('processing')
       const resp = await fetch(`${apiBase()}/sessions/${sid}/finish`, { method: 'POST', headers: authHeaders() })
       if (!resp.ok) { logLine('finish failed: ' + (await resp.text())); return }
       const data = await resp.json()
@@ -126,7 +127,7 @@ export default function IngestPage() {
       <Card>
         <CardContent className="space-y-3">
           <div className="flex flex-wrap gap-2 items-center">
-            <Button onClick={startRecording} disabled={status === 'recording'}>Start Recording</Button>
+            <Button onClick={startRecording} disabled={status === 'recording' || status === 'processing'}>Start Recording</Button>
             <Button variant="ghost" onClick={stopRecording} disabled={status !== 'recording'}>Stop + Finish</Button>
             <div className="text-sm text-muted-foreground">Session: <span className="font-mono">{sessionId || '-'}</span></div>
           </div>
@@ -146,6 +147,15 @@ export default function IngestPage() {
           <pre className="bg-muted rounded-md p-3 max-h-72 overflow-auto whitespace-pre-wrap text-sm">{log.join('\n')}</pre>
         </CardContent>
       </Card>
+
+      {status === 'processing' && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="text-sm text-muted-foreground">Processing</div>
+            <div className="text-lg font-medium mt-1">Merging chunks and transcribing…</div>
+          </CardContent>
+        </Card>
+      )}
     </main>
   )
 }
