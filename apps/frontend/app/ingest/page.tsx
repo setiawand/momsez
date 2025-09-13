@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { apiBase, authHeaders } from '../../lib/api'
+import { apiBase, authHeaders, wsUrl } from '../../lib/api'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader } from '../../components/ui/card'
 
@@ -19,6 +19,13 @@ export default function IngestPage() {
   const audioCtxRef = useRef<AudioContext | null>(null)
   const analyserRef = useRef<AnalyserNode | null>(null)
   const router = useRouter()
+  const wsRef = useRef<WebSocket | null>(null)
+  const redirectedRef = useRef<boolean>(false)
+  const [toast, setToast] = useState<string>('')
+  const [procElapsed, setProcElapsed] = useState<number>(0)
+  const [procPercent, setProcPercent] = useState<number>(0)
+  const procTimerRef = useRef<any>(null)
+  const audioEstSecRef = useRef<number>(0)
 
   const logLine = (s: string) => setLog(prev => [s, ...prev].slice(0, 100))
 
@@ -84,11 +91,53 @@ export default function IngestPage() {
       // call finish only after recorder is fully stopped and last chunk delivered
       const sid = sessionIdRef.current
       setStatus('processing')
+      // Start simple progress based on estimated audio length (chunks * 3s)
+      audioEstSecRef.current = Math.max(1, chunksRef.current * 3)
+      const est = Math.max(5, Math.round(audioEstSecRef.current * 1.0))
+      const startTs = Date.now()
+      if (procTimerRef.current) clearInterval(procTimerRef.current)
+      procTimerRef.current = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTs) / 1000)
+        setProcElapsed(elapsed)
+        const pct = Math.min(95, Math.round((elapsed / est) * 100))
+        setProcPercent(pct)
+      }, 500)
+
+      // Open WS to listen for 'completed' event
+      try {
+        const token = localStorage.getItem('MOMSEZ_JWT') || ''
+        const u = wsUrl(`/ws/session?session_id=${sid}&token=${encodeURIComponent(token)}`)
+        const ws = new WebSocket(u)
+        ws.onmessage = (ev) => {
+          try {
+            const msg = JSON.parse(ev.data)
+            if (msg?.type === 'completed' && msg?.session_id === sid && !redirectedRef.current) {
+              setToast('Selesai — transcript siap diunduh')
+              setTimeout(() => setToast(''), 2000)
+              if (procTimerRef.current) { clearInterval(procTimerRef.current); procTimerRef.current = null }
+              redirectedRef.current = true
+              setTimeout(() => { try { router.push(`/sessions/${sid}`) } catch {} }, 600)
+              try { ws.close() } catch {}
+            }
+          } catch {}
+        }
+        wsRef.current = ws
+      } catch {}
+
+      // Kick off finish request; fallback redirect if no WS event arrives shortly
       const resp = await fetch(`${apiBase()}/sessions/${sid}/finish`, { method: 'POST', headers: authHeaders() })
       if (!resp.ok) { logLine('finish failed: ' + (await resp.text())); return }
-      const data = await resp.json()
-      logLine('completed: ' + (data.transcript_path || ''))
-      try { router.push(`/sessions/${sid}`) } catch {}
+      setTimeout(async () => {
+        if (!redirectedRef.current) {
+          try { await resp.json() } catch {}
+          setToast('Selesai — transcript siap diunduh')
+          setTimeout(() => setToast(''), 1500)
+          if (procTimerRef.current) { clearInterval(procTimerRef.current); procTimerRef.current = null }
+          try { wsRef.current?.close() } catch {}
+          redirectedRef.current = true
+          try { router.push(`/sessions/${sid}`) } catch {}
+        }
+      }, 1200)
     }
     mr.start(3000) // 3s chunks
     mediaRecRef.current = mr
@@ -115,6 +164,8 @@ export default function IngestPage() {
   useEffect(() => () => {
     mediaRecRef.current?.stop()
     streamRef.current?.getTracks().forEach(t => t.stop())
+    try { wsRef.current?.close() } catch {}
+    if (procTimerRef.current) { clearInterval(procTimerRef.current); procTimerRef.current = null }
   }, [])
 
   return (
@@ -151,10 +202,22 @@ export default function IngestPage() {
       {status === 'processing' && (
         <Card>
           <CardContent className="py-4">
-            <div className="text-sm text-muted-foreground">Processing</div>
-            <div className="text-lg font-medium mt-1">Merging chunks and transcribing…</div>
+            <div className="flex items-center gap-3">
+              <div className="h-4 w-4 rounded-full border-2 border-gray-300 border-t-gray-700 animate-spin" />
+              <div>
+                <div className="text-sm text-muted-foreground">Processing</div>
+                <div className="text-sm">Merging chunks and transcribing… ({procPercent}%)</div>
+                <div className="text-xs text-muted-foreground">Est. audio ~ {Math.max(1, audioEstSecRef.current)}s • Elapsed {procElapsed}s</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
+      )}
+
+      {toast && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-black text-white text-sm px-3 py-2 rounded shadow">{toast}</div>
+        </div>
       )}
     </main>
   )
