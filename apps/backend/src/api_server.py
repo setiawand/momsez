@@ -1435,6 +1435,78 @@ async def upload_audio_file(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
 
+@app.post("/upload/transcribe")
+async def upload_and_transcribe(file: UploadFile = File(...), language: Optional[str] = None):
+    """Upload a single audio file and run transcription.
+    Accepts common audio containers/codecs (wav, webm/opus, m4a, mp3, flac, ogg/opus, etc.).
+    Returns transcript text and paths.
+    """
+    # 1) Save upload to uploads/
+    upload_dir = PROJECT_ROOT / 'uploads'
+    upload_dir.mkdir(exist_ok=True)
+    try:
+        import re
+        original_name = os.path.basename(file.filename or 'audio')
+        safe_name = re.sub(r"[^A-Za-z0-9._-]", "_", original_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        saved_path = (upload_dir / f"{timestamp}_{safe_name}").resolve()
+        if not str(saved_path).startswith(str(upload_dir.resolve())):
+            raise HTTPException(status_code=400, detail="Invalid filename")
+        content = await file.read()
+        with open(saved_path, 'wb') as f:
+            f.write(content)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to save upload: {e}")
+
+    # 2) Prepare output dir under output/uploads_runs/<uuid>
+    run_id = uuid.uuid4().hex
+    out_dir = PROJECT_ROOT / 'output' / 'uploads_runs' / run_id
+    (out_dir / 'recordings').mkdir(parents=True, exist_ok=True)
+    (out_dir / 'transcripts').mkdir(parents=True, exist_ok=True)
+    (out_dir / 'logs').mkdir(parents=True, exist_ok=True)
+
+    # 3) Ensure WAV mono 16k for whisper.cpp
+    try:
+        dst_wav = out_dir / 'recordings' / 'input.wav'
+        ok = _convert_to_wav(Path(saved_path), dst_wav)
+        if not ok or not dst_wav.exists() or dst_wav.stat().st_size == 0:
+            raise HTTPException(status_code=400, detail="Unsupported or invalid audio file")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Audio conversion failed: {e}")
+
+    # 4) Transcribe
+    cfg = {
+        'output_dir': str(out_dir),
+        'whisper_bin': './whisper.cpp/main',
+        'chunk_model': './whisper.cpp/models/ggml-small.bin',
+        'language': (language or 'auto'),
+    }
+    try:
+        transcriber = BatchTranscriber(cfg, interactive=False)
+        transcript_path = transcriber.transcribe_audio(dst_wav)
+        text = ''
+        if transcript_path and Path(transcript_path).exists():
+            with open(transcript_path, 'r', encoding='utf-8') as f:
+                text = f.read()
+        # Build relative paths for frontend helpers
+        rel_audio = str(Path(str(dst_wav)).relative_to(PROJECT_ROOT)) if dst_wav.exists() else None
+        rel_transcript = str(Path(str(transcript_path)).relative_to(PROJECT_ROOT)) if transcript_path else None
+        return {
+            'status': 'completed',
+            'audio_path': rel_audio,
+            'transcript_path': rel_transcript,
+            'text': text,
+            'run_id': run_id,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Transcription failed: {e}")
+
 # WebSocket endpoint for real-time updates
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

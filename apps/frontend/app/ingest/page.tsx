@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from '../../components/ui/card'
 export default function IngestPage() {
   const [sessionId, setSessionId] = useState<string>('')
   const [status, setStatus] = useState<string>('idle')
+  const [language, setLanguage] = useState<string>('auto')
   const mediaRecRef = useRef<MediaRecorder | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<number>(0)
@@ -35,7 +36,7 @@ export default function IngestPage() {
     if (!sessionId) {
       const res = await fetch(`${apiBase()}/sessions/start`, {
         method: 'POST', headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ingest: true, language: 'id' })
+        body: JSON.stringify({ ingest: true, language })
       })
       if (!res.ok) { logLine('start failed: ' + (await res.text())); return }
       const data = await res.json();
@@ -190,6 +191,19 @@ export default function IngestPage() {
             <div className="text-sm text-muted-foreground">Session: <span className="font-mono">{sessionId || '-'}</span></div>
           </div>
           <div className="flex items-center gap-4">
+            <label className="text-sm flex items-center gap-2">
+              <span>Language</span>
+              <select
+                className="border rounded px-2 py-1 text-sm"
+                value={language}
+                onChange={e => setLanguage(e.target.value)}
+                disabled={status === 'recording' || status === 'processing'}
+              >
+                <option value="auto">Auto</option>
+                <option value="id">Indonesian (id)</option>
+                <option value="en">English (en)</option>
+              </select>
+            </label>
             <div className="text-sm">Elapsed: <span className="font-mono">{Math.floor(elapsed/60)}:{String(elapsed%60).padStart(2,'0')}</span></div>
             <div className="flex items-center gap-2">
               <div className="text-sm">Level</div>
