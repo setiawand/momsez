@@ -1,0 +1,4 @@
+{
+  "chunk_model": "whisper.cpp/models/ggml-medium.bin",
+  "whisper_bin": "./whisper.cpp/main"
+}

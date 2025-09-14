@@ -102,6 +102,7 @@ sessions: Dict[str, Dict] = {}
 # invoked while holding the same lock. A non-reentrant Lock would deadlock.
 sessions_lock = threading.RLock()
 active_device_sessions: Dict[str, str] = {}
+model_downloads: Dict[str, Dict] = {}
 
 # CORS middleware
 app.add_middleware(
@@ -129,6 +130,7 @@ ALLOWED_DIRS = [
     PROJECT_ROOT / 'output',
     PROJECT_ROOT / 'uploads',
 ]
+SETTINGS_PATH = PROJECT_ROOT / 'configs' / 'server_settings.json'
 
 def _safe_resolve(path_str: str) -> Path:
     """Resolve a user-provided path safely within allowed directories.
@@ -150,6 +152,43 @@ def _device_key(device_index: Optional[int]) -> str:
     """Return key used to gate concurrent capture on the same device."""
     return 'default' if device_index is None else str(device_index)
 
+# ---- Server settings helpers ----
+def _default_settings() -> Dict:
+    return {
+        'chunk_model': './whisper.cpp/models/ggml-small.bin',
+        'whisper_bin': './whisper.cpp/main',
+    }
+
+def _load_settings() -> Dict:
+    try:
+        if SETTINGS_PATH.exists():
+            with open(SETTINGS_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                d = _default_settings()
+                d.update(data)
+                return d
+    except Exception:
+        pass
+    try:
+        SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(_default_settings(), f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+    return _default_settings()
+
+def _save_settings(changes: Dict) -> Dict:
+    cur = _load_settings()
+    cur.update({k: v for k, v in (changes or {}).items() if v is not None})
+    try:
+        SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(SETTINGS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(cur, f, ensure_ascii=False, indent=2)
+    except Exception:
+        pass
+    return cur
+
 # ---- Session persistence (meta.json per session) ----
 def _session_meta_path(out_dir: Path) -> Path:
     return Path(out_dir) / 'meta.json'
@@ -169,6 +208,13 @@ def _write_session_meta(session_id: str):
         if not s:
             return
         out_dir = Path(s.get('output_dir') or (PROJECT_ROOT / 'output' / 'sessions' / session_id))
+        # Determine model path used for this session (if any); fall back to current settings
+        model_path = s.get('model')
+        if not model_path:
+            try:
+                model_path = _load_settings().get('chunk_model')
+            except Exception:
+                model_path = None
         meta = {
             'session_id': session_id,
             'user_id': s.get('user_id'),
@@ -180,6 +226,7 @@ def _write_session_meta(session_id: str):
             'audio_duration': s.get('audio_duration'),
             'language': s.get('language') or 'auto',
             'chunk_count': int(s.get('chunk_count') or 0),
+            'model': _to_rel(model_path) if model_path else None,
         }
     try:
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -567,6 +614,7 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
     """Start a sessionized microphone recording. Returns session_id."""
     try:
         cfg = load_batch_config('configs/hybrid_config_meeting.json')
+        settings = _load_settings()
         if config.language:
             cfg['language'] = config.language
         if config.device_index is not None:
@@ -600,6 +648,7 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                     'chunk_count': 0,
                     'language': cfg.get('language', 'auto'),
                     'audio_duration': None,
+                    'model': settings.get('chunk_model'),
                 }
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
                 try:
@@ -624,6 +673,7 @@ async def sessions_start(config: RecordingConfig, user: Dict = Depends(get_curre
                     'error': None,
                     'language': cfg.get('language', 'auto'),
                     'audio_duration': None,
+                    'model': settings.get('chunk_model'),
                 }
                 active_device_sessions[dev_key] = session_id
                 _ensure_session_owner(sessions[session_id], _user_id_from_payload(user))
@@ -1038,10 +1088,11 @@ async def sessions_finish(session_id: str, user: Dict = Depends(get_current_user
         raise HTTPException(status_code=500, detail=f"Failed to merge chunks: {e}")
 
     # Transcribe
+    settings = _load_settings()
     cfg = {
         'output_dir': str(out_dir),
-        'whisper_bin': './whisper.cpp/main',
-        'chunk_model': './whisper.cpp/models/ggml-small.bin',
+        'whisper_bin': settings.get('whisper_bin', './whisper.cpp/main'),
+        'chunk_model': settings.get('chunk_model', './whisper.cpp/models/ggml-small.bin'),
         'language': session.get('language') or 'auto',
     }
     # Broadcast processing with actual audio duration before transcription
@@ -1400,6 +1451,264 @@ async def get_transcript_content(file_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to read file: {str(e)}")
 
+# ---- Model management endpoints ----
+def _models_dir() -> Path:
+    return PROJECT_ROOT / 'whisper.cpp' / 'models'
+
+def _installed_models() -> List[Dict]:
+    items: List[Dict] = []
+    d = _models_dir()
+    try:
+        if d.exists():
+            for p in sorted(d.glob('ggml-*.bin')):
+                try:
+                    sz = p.stat().st_size
+                    # derive model key (e.g., 'medium' from 'ggml-medium.bin')
+                    fname = p.name
+                    model_key = None
+                    if fname.startswith('ggml-') and fname.endswith('.bin'):
+                        model_key = fname[len('ggml-'):-len('.bin')]
+                    # skip if a download task is in progress for this model
+                    with sessions_lock:
+                        if model_key and model_downloads.get(model_key, {}).get('status') == 'downloading':
+                            continue
+                    # filter out zero-sized or partial files
+                    if sz and sz > 1024:
+                        items.append({'name': fname, 'path': str(p.relative_to(PROJECT_ROOT)), 'size': sz})
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    return items
+
+@app.get("/models/installed")
+async def models_installed():
+    return {'models': _installed_models()}
+
+@app.get("/models/catalog")
+async def models_catalog():
+    # Common Whisper.cpp models; this list can be extended
+    names = [
+        'tiny', 'tiny.en', 'base', 'base.en', 'small', 'small.en', 'medium', 'medium.en', 'large', 'large-v1', 'large-v2', 'large-v3'
+    ]
+    return {'models': names}
+
+def _model_file_for_name(name: str) -> Path:
+    return _models_dir() / f"ggml-{name}.bin"
+
+def _start_download_model(name: str):
+    def run():
+        try:
+            # Prefer the official download script if present
+            script = PROJECT_ROOT / 'whisper.cpp' / 'models' / 'download-ggml-model.sh'
+            dest_path = _model_file_for_name(name)
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            log = ''
+            rc = 1
+            if script.exists():
+                # Run from whisper.cpp root so the script writes to models/ correctly
+                cmd = ['bash', str(script), name]
+                p = subprocess.run(cmd, cwd=str(PROJECT_ROOT / 'whisper.cpp'), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                rc = p.returncode
+                log += (p.stdout or '') + "\n"
+                # Verify file size; if invalid, fall back to direct curl
+                if not (rc == 0 and dest_path.exists() and dest_path.stat().st_size > 1024 * 1024):
+                    try:
+                        if dest_path.exists() and dest_path.stat().st_size <= 1024 * 1024:
+                            dest_path.unlink()
+                    except Exception:
+                        pass
+                    urls = [
+                        f"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{name}.bin",
+                        f"https://ggml.ggerganov.com/ggml-model-whisper-{name}.bin",
+                    ]
+                    for url in urls:
+                        cmd = ['curl', '-fL', '--retry', '3', '--retry-delay', '2', '-H', 'Accept: application/octet-stream', '-o', str(dest_path), url]
+                        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                        rc = p.returncode
+                        log += f"URL: {url}\n" + (p.stdout or '') + "\n"
+                        if rc == 0 and dest_path.exists() and dest_path.stat().st_size > 1024 * 1024:
+                            break
+            else:
+                # Fallback URLs to try sequentially
+                # Prefer Hugging Face first; ggml.ggerganov mirror can 404 for some models
+                urls = [
+                    f"https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-{name}.bin",
+                    f"https://ggml.ggerganov.com/ggml-model-whisper-{name}.bin",
+                ]
+                for url in urls:
+                    cmd = ['curl', '-fL', '--retry', '3', '--retry-delay', '2', '-H', 'Accept: application/octet-stream', '-o', str(dest_path), url]
+                    p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    rc = p.returncode
+                    log += f"URL: {url}\n" + (p.stdout or '') + "\n"
+                    if rc == 0 and dest_path.exists() and dest_path.stat().st_size > 1024 * 1024:
+                        break
+            p = subprocess.CompletedProcess(args=[], returncode=rc)
+            # Verify file size > 1MB
+            final = _model_file_for_name(name)
+            ok = (p.returncode == 0 and final.exists() and final.stat().st_size > 1024 * 1024)
+            with sessions_lock:
+                model_downloads[name] = {'status': 'completed' if ok else 'error', 'code': p.returncode, 'log': log}
+        except Exception as e:
+            with sessions_lock:
+                model_downloads[name] = {'status': 'error', 'error': str(e)}
+    with sessions_lock:
+        model_downloads[name] = {'status': 'downloading', 'started_at': datetime.now().isoformat()}
+    t = threading.Thread(target=run, daemon=True)
+    t.start()
+
+@app.post("/models/download")
+async def models_download(req: Dict):
+    name = (req.get('name') or '').strip()
+    if not name:
+        raise HTTPException(status_code=400, detail='name is required')
+    # If already installed with reasonable size, return; otherwise clean partials
+    dest = _model_file_for_name(name)
+    if dest.exists():
+        try:
+            sz = dest.stat().st_size
+        except Exception:
+            sz = 0
+        if sz and sz > 1024 * 1024:  # > 1 MB considered valid
+            with sessions_lock:
+                model_downloads[name] = {'status': 'completed', 'note': 'already installed'}
+            return {'name': name, 'status': 'completed'}
+        # partial or zero-sized file: remove and re-download
+        try:
+            dest.unlink()
+        except Exception:
+            pass
+    _start_download_model(name)
+    return {'name': name, 'status': 'downloading'}
+
+@app.get("/models/downloads")
+async def models_downloads():
+    with sessions_lock:
+        return {'downloads': model_downloads}
+
+@app.get("/settings")
+async def get_settings():
+    return _load_settings()
+
+@app.post("/settings")
+async def update_settings(req: Dict):
+    # Allow updating chunk_model to a chosen installed model path (relative or absolute)
+    chunk_model = req.get('chunk_model')
+    if chunk_model:
+        # Resolve path robustly. Accept:
+        # - absolute paths
+        # - project-root relative paths like 'whisper.cpp/models/ggml-small.bin'
+        # - model filenames like 'ggml-small.bin'
+        p_in = Path(chunk_model)
+        candidates = []
+        if p_in.is_absolute():
+            candidates.append(p_in)
+        else:
+            # 1) treat as project-root relative
+            candidates.append((PROJECT_ROOT / p_in))
+            # 2) treat as under models dir
+            candidates.append(_models_dir() / p_in)
+        rp = None
+        for c in candidates:
+            try:
+                rc = c.resolve()
+            except Exception:
+                continue
+            if rc.exists():
+                rp = rc
+                break
+        if not rp or not rp.exists():
+            raise HTTPException(status_code=400, detail='Model file does not exist')
+        # store as project-relative path for portability
+        chunk_model = str(rp.relative_to(PROJECT_ROOT)) if str(rp).startswith(str(PROJECT_ROOT)) else str(rp)
+    settings = _save_settings({'chunk_model': chunk_model})
+    return settings
+
+@app.post("/models/upload")
+async def models_upload(file: UploadFile = File(...)):
+    """Upload a local Whisper model file (.bin) into whisper.cpp/models.
+    Useful when the server cannot access the internet to download models.
+    """
+    name = os.path.basename(file.filename or '')
+    if not name:
+        raise HTTPException(status_code=400, detail='filename is required')
+    # Basic sanitation
+    import re
+    safe = re.sub(r"[^A-Za-z0-9._-]", "_", name)
+    if not safe.endswith('.bin'):
+        safe += '.bin'
+    dest = _models_dir() / safe
+    try:
+        _models_dir().mkdir(parents=True, exist_ok=True)
+        content = await file.read()
+        with open(dest, 'wb') as f:
+            f.write(content)
+        sz = dest.stat().st_size
+        return {'status': 'ok', 'name': dest.name, 'path': str(dest.relative_to(PROJECT_ROOT)), 'size': sz}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f'Failed to save model: {e}')
+
+@app.post("/models/validate")
+async def models_validate(req: Dict | None = None):
+    """Validate that the selected (or provided) model can be loaded by whisper.cpp.
+    Optionally accepts { path: "path/to/model.bin" } else uses current settings chunk_model.
+    Runs a short transcription on the bundled sample (jfk.wav) and returns status + log.
+    """
+    settings = _load_settings()
+    model_path = (req or {}).get('path') if isinstance(req, dict) else None
+    if not model_path:
+        model_path = settings.get('chunk_model')
+    if not model_path:
+        raise HTTPException(status_code=400, detail='No model path provided or configured')
+
+    # Resolve model path relative to project root if needed
+    mp = Path(model_path)
+    if not mp.is_absolute():
+        mp = (PROJECT_ROOT / mp).resolve()
+    try:
+        rp = mp.resolve()
+    except Exception:
+        raise HTTPException(status_code=400, detail='Invalid model path')
+    if not rp.exists():
+        raise HTTPException(status_code=400, detail='Model file does not exist')
+
+    whisper_bin = settings.get('whisper_bin', './whisper.cpp/main')
+    wb = Path(whisper_bin)
+    if not wb.is_absolute():
+        wb = (PROJECT_ROOT / wb).resolve()
+    if not wb.exists():
+        raise HTTPException(status_code=400, detail='Whisper binary not found')
+
+    sample = (PROJECT_ROOT / 'whisper.cpp' / 'samples' / 'jfk.wav').resolve()
+    if not sample.exists():
+        raise HTTPException(status_code=500, detail='Sample audio not found for validation')
+
+    out_dir = PROJECT_ROOT / 'output' / '.model_validate'
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    cmd = [
+        str(wb),
+        '-m', str(rp),
+        '-l', 'en',
+        '--output-txt', '--no-timestamps',
+        '-ofolder', str(out_dir),
+        '-f', str(sample),
+    ]
+    try:
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=120)
+        ok = (p.returncode == 0)
+        log = p.stdout or ''
+        # best-effort cleanup of generated file(s)
+        try:
+            gen = out_dir / (sample.name + '.txt')
+            if gen.exists():
+                gen.unlink()
+        except Exception:
+            pass
+        return {'valid': ok, 'code': p.returncode, 'log': log[-4000:], 'model_path': str(rp.relative_to(PROJECT_ROOT)) if str(rp).startswith(str(PROJECT_ROOT)) else str(rp)}
+    except subprocess.TimeoutExpired:
+        return {'valid': False, 'code': -1, 'error': 'timeout', 'model_path': str(rp)}
+
 @app.post("/transcription/upload")
 async def upload_audio_file(file: UploadFile = File(...)):
     """Upload audio file for transcription"""
@@ -1479,10 +1788,11 @@ async def upload_and_transcribe(file: UploadFile = File(...), language: Optional
         raise HTTPException(status_code=500, detail=f"Audio conversion failed: {e}")
 
     # 4) Transcribe
+    settings = _load_settings()
     cfg = {
         'output_dir': str(out_dir),
-        'whisper_bin': './whisper.cpp/main',
-        'chunk_model': './whisper.cpp/models/ggml-small.bin',
+        'whisper_bin': settings.get('whisper_bin', './whisper.cpp/main'),
+        'chunk_model': settings.get('chunk_model', './whisper.cpp/models/ggml-small.bin'),
         'language': (language or 'auto'),
     }
     try:

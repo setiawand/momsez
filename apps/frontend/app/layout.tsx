@@ -20,6 +20,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <a href="/sessions" className="hover:text-black">Sessions</a>
               <a href="/ingest" className="hover:text-black">Record</a>
               <a href="/upload" className="hover:text-black">Upload</a>
+              <a href="/settings" className="hover:text-black">Settings</a>
               <a href="/login" className="hover:text-black">Login</a>
             </nav>
           </div>

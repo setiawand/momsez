@@ -11,6 +11,7 @@ services:
       - ./hybrid_output:/app/hybrid_output
       - ./configs:/app/configs
       - ./.transient:/app/.transient
+      - ./whisper.cpp/models:/app/whisper.cpp/models
       # Audio device access
       - /dev/snd:/dev/snd
     devices:
